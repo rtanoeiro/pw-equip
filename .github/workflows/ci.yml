@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  Tests:
+    name: Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+            go-version: "1.24.2"
+
+      - name: Setup Mise
+        uses: jdx/mise-action@v2
+        with:
+          cache: false
+          experimental: true
+
+      - name: Run checks
+        run: mise run checks
