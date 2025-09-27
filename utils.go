@@ -23,6 +23,7 @@ func AskQuestion(question string) string {
 		fmt.Println("Erro ao ler resposta. Tente novamente.")
 		return AskQuestion(question)
 	}
+	fmt.Println("Resposta: ", variableToRead)
 	return variableToRead
 }
 
@@ -45,18 +46,21 @@ func StringToInt(value string) (int, error) {
 	return intValue, nil
 }
 
-func ValidadeNumberEquips(numEquips string) bool {
-	numInt, errInt := StringToInt(numEquips)
-	if errInt != nil {
-		return false
-	}
-	if numInt <= 11 && numInt >= 1 {
+func ValidadeNumberEquips(numEquips int) bool {
+	if numEquips <= 11 && numEquips >= 1 {
 		return true
 	}
 	return false
 }
 
-func ChangeItems(equipSetup SetupEquip) SetupEquip {
+func ValidateKeyShift(keyShift string) bool {
+	if keyShift == "v" || keyShift == "`" {
+		return true
+	}
+	return false
+}
+
+func ChangeItems(equipSetup *SetupEquip) {
 	if equipSetup.CurrentSet == 1 {
 		ClickButton(equipSetup.KeyChange)
 		ClickButton(equipSetup.KeyChange)
@@ -65,7 +69,7 @@ func ChangeItems(equipSetup SetupEquip) SetupEquip {
 		}
 		ClickButton(equipSetup.KeyChange)
 		equipSetup.CurrentSet = 2
-		return equipSetup
+		fmt.Println("Set trocado com sucesso para o segundo")
 	}
 
 	if equipSetup.CurrentSet == 2 {
@@ -75,8 +79,7 @@ func ChangeItems(equipSetup SetupEquip) SetupEquip {
 		}
 		ClickButton(equipSetup.KeyChange)
 		ClickButton(equipSetup.KeyChange)
+		fmt.Println("Set trocado com sucesso para o primeiro")
 		equipSetup.CurrentSet = 2
-		return equipSetup
 	}
-	return equipSetup
 }
