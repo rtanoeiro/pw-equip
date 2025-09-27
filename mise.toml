@@ -1,3 +1,27 @@
+[tools]
+"aqua:golangci/golangci-lint" = "latest"
+"aqua:securego/gosec" = "latest"
+go = "1.24.5"
+
+[tasks.test]
+description = "Run tests with database migrations"
+run = "go test ./... --cover -v"
+
+[tasks.sec]
+description = "Run security checks"
+run = "gosec -exclude=G101,G104 ./..."
+
+[tasks.fmt]
+description = "Format Go code"
+run = "go fmt ./..."
+
+[tasks.lint]
+description = "Run linter"
+run = "golangci-lint run ./..."
+
+[tasks.checks]
+description = "Run all checks (test, security, format, lint)"
+depends = ["test", "sec", "fmt", "lint"]
+
 [tasks.build]
-description = "Build the Application"
-run = "go build -o pw-set0.1 && go build -o pw-set0.1.exe"
+run = "sh build.sh"
