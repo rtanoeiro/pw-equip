@@ -11,6 +11,7 @@ func Run() {
 
 	numItemsQuestion := "Quantos items voce deseja trocar?"
 	keyShiftQuestion := "Qual a letra do teclado que muda as barras de skills?"
+	timeBetweenClicks := "Quanto tempo voce deseja esperar entre os clicks? (em segundos)"
 
 	fmt.Println("Bem vindo ao seu auxilio de troca de set.")
 	fmt.Println("Para que esse programa funciona do jeito esperado, deixe 3 barras livres para serem rotacionadas.")
@@ -40,9 +41,12 @@ func Run() {
 		log.Fatal("Tecla para mudar de items deve ser 'v' ou '`'")
 	}
 
+	timeClicks := AskQuestionInt(timeBetweenClicks)
+
 	basicSetup := SetupEquip{
 		NumberItems: numItem,
 		KeyChange:   keyShiftLetter,
+		TimeClicks:  timeClicks,
 		CurrentSet:  1,
 	}
 
