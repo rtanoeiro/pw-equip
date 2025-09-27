@@ -8,6 +8,7 @@ import (
 )
 
 var numItemsQuestion = "Quantos items voce deseja trocar?"
+var keyShiftLetterQuestion = "Qual a letra do teclado que muda as barras de skills?"
 var keyShiftQuestion = "Quantas barras o seu V ou ` vao trocar?"
 
 func main() {
@@ -18,7 +19,7 @@ func main() {
 	fmt.Println("Digamos que voce deseja iniciar com equipamentos de ataque, na segunda barra deixe os Equipamentos de ataque")
 	fmt.Println("Na ultima barra, deixe os Equipamentos de defesa")
 	fmt.Println("Caso deseje iniciar com os de defesa, deixe as barras de forma contraria")
-	fmt.Println("Para trocar de set aperte o botao da roda do mouse!")
+	fmt.Println("Para trocar de set aperte a letra Q!")
 	fmt.Println()
 	fmt.Println()
 
@@ -28,15 +29,21 @@ func main() {
 		log.Fatal("O numero maximo de items permitidos eh 11")
 	}
 
-	keyShift := AskQuestion(keyShiftQuestion)
-	errorShift := ValidateKeyShift(keyShift)
-	if !errorShift {
+	keyShiftLetter := AskQuestion(keyShiftQuestion)
+	errorShiftLetter := ValidateKeyShift(keyShiftLetter)
+	if !errorShiftLetter {
+		log.Fatal("Resposta invalida, tente usar 'v' ou '`'")
+	}
+
+	keyShiftNumber := AskQuestion(keyShiftQuestion)
+	errorShiftNumber := ValidateKeyShift(keyShiftNumber)
+	if !errorShiftNumber {
 		log.Fatal("Tecla para mudar de items deve ser 'v' ou '`'")
 	}
 
 	basicSetup := SetupEquip{
 		NumberItems: numItem,
-		KeyChange:   keyShift,
+		KeyChange:   keyShiftLetter,
 		CurrentSet:  1,
 	}
 
@@ -51,7 +58,7 @@ func main() {
 		evChan := hook.Start()
 		defer hook.End()
 		for ev := range evChan {
-			if ev.Kind == hook.MouseWheel {
+			if ev.Kind == hook.KeyDown && ev.Keycode == 16 {
 				fmt.Println("Clique na roda do mouse, trocando o set...")
 				ChangeItems(&basicSetup)
 			}
