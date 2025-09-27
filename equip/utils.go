@@ -67,7 +67,7 @@ func ChangeItems(equipSetup *SetupEquip) {
 		ClickButton(equipSetup.KeyChange)
 		for _, itemToPress := range equipSetup.ItemKeys {
 			ClickButton(itemToPress)
-			time.Sleep(50)
+			time.Sleep(time.Duration(equipSetup.TimeClicks) * time.Millisecond)
 		}
 		ClickButton(equipSetup.KeyChange)
 		equipSetup.CurrentSet = 2
@@ -78,10 +78,11 @@ func ChangeItems(equipSetup *SetupEquip) {
 		ClickButton(equipSetup.KeyChange)
 		for _, itemToPress := range equipSetup.ItemKeys {
 			ClickButton(itemToPress)
+			time.Sleep(time.Duration(equipSetup.TimeClicks) * time.Millisecond)
 		}
 		ClickButton(equipSetup.KeyChange)
 		ClickButton(equipSetup.KeyChange)
 		fmt.Println("Set trocado com sucesso para o primeiro")
-		equipSetup.CurrentSet = 2
+		equipSetup.CurrentSet = 1
 	}
 }
