@@ -51,7 +51,7 @@ func main() {
 		evChan := hook.Start()
 		defer hook.End()
 		for ev := range evChan {
-			if ev.Kind == hook.WheelDown {
+			if ev.Kind == hook.MouseWheel {
 				ChangeItems(&basicSetup)
 			}
 		}
