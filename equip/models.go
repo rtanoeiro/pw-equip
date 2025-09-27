@@ -1,4 +1,4 @@
-package main
+package equip
 
 type SetupEquip struct {
 	NumberItems int
