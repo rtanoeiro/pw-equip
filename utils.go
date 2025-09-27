@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"time"
 
 	"github.com/go-vgo/robotgo"
 )
@@ -66,6 +67,7 @@ func ChangeItems(equipSetup *SetupEquip) {
 		ClickButton(equipSetup.KeyChange)
 		for _, itemToPress := range equipSetup.ItemKeys {
 			ClickButton(itemToPress)
+			time.Sleep(50)
 		}
 		ClickButton(equipSetup.KeyChange)
 		equipSetup.CurrentSet = 2
