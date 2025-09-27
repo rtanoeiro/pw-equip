@@ -84,6 +84,17 @@ func (g *GuiApp) RunGUI() {
 	// Status label
 	statusLabel := widget.NewLabel("Configure os campos acima e clique em 'Iniciar'")
 
+	// HWID display (for support purposes)
+	hwidLabel := widget.NewLabel("Carregando HWID...")
+	go func() {
+		hwid, err := GetHWID()
+		if err == nil {
+			hwidLabel.SetText(fmt.Sprintf("HWID: %s", hwid))
+		} else {
+			hwidLabel.SetText("Erro ao obter HWID")
+		}
+	}()
+
 	// Start button
 	var startButton *widget.Button
 	var stopMonitoring chan bool
@@ -128,21 +139,41 @@ func (g *GuiApp) RunGUI() {
 			}
 		}
 
-		// Setup configuration
-		g.setup = &SetupEquip{
-			NumberItems: numItems,
-			KeyChange:   keyShift,
-			TimeClicks:  timeClicks,
-			ItemKeys:    itemKeys,
-			CurrentSet:  1,
-		}
+		// Check subscription before starting monitoring
+		statusLabel.SetText("Verificando assinatura...")
+		startButton.SetText("Verificando...")
 
-		statusLabel.SetText("Monitoramento ativo! Pressione Q para trocar de set.")
-		startButton.SetText("Parar Monitoramento")
+		go func() {
+			// Check subscription with retry
+			isActive, err := ValidateSubscriptionWithRetry(3)
+			if err != nil {
+				statusLabel.SetText(fmt.Sprintf("Erro ao verificar assinatura: %v", err))
+				startButton.SetText("Iniciar Monitoramento")
+				return
+			}
 
-		// Start monitoring in a goroutine
-		stopMonitoring = make(chan bool)
-		go g.startMonitoring(statusLabel, startButton, stopMonitoring)
+			if !isActive {
+				statusLabel.SetText("Assinatura inativa. Entre em contato com o suporte.")
+				startButton.SetText("Iniciar Monitoramento")
+				return
+			}
+
+			// Setup configuration
+			g.setup = &SetupEquip{
+				NumberItems: numItems,
+				KeyChange:   keyShift,
+				TimeClicks:  timeClicks,
+				ItemKeys:    itemKeys,
+				CurrentSet:  1,
+			}
+
+			statusLabel.SetText("Assinatura ativa! Monitoramento iniciado. Pressione Q para trocar de set.")
+			startButton.SetText("Parar Monitoramento")
+
+			// Start monitoring in a goroutine
+			stopMonitoring = make(chan bool)
+			go g.startMonitoring(statusLabel, startButton, stopMonitoring)
+		}()
 	})
 
 	// Form layout
@@ -158,6 +189,8 @@ func (g *GuiApp) RunGUI() {
 		itemKeysContainer,
 		startButton,
 		statusLabel,
+		widget.NewSeparator(),
+		hwidLabel,
 	)
 
 	scrollContainer := container.NewScroll(form)
