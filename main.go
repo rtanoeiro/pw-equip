@@ -52,6 +52,7 @@ func main() {
 		defer hook.End()
 		for ev := range evChan {
 			if ev.Kind == hook.MouseWheel {
+				fmt.Println("Clique na roda do mouse, trocando o set...")
 				ChangeItems(&basicSetup)
 			}
 		}
