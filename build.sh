@@ -13,19 +13,19 @@ case $OS in
         echo "Building for macOS..."
         # On macOS, build normally
         go build -o pw-equip-changer
-        echo "✅ macOS build complete: pw-equip-gui"
+        echo "✅ macOS build complete: pw-equip-changer"
         ;;
     "Linux")
         echo "Building for Linux..."
         # On Linux, build normally
         go build -o pw-equip-changer
-        echo "✅ Linux build complete: pw-equip-gui"
+        echo "✅ Linux build complete: pw-equip-changer"
         ;;
     "MINGW"*|"MSYS"*|"CYGWIN"*)
         echo "Building for Windows..."
         # On Windows, use windowsgui flag to prevent console window
         go build -ldflags="-H windowsgui" -o pw-equip-changer.exe
-        echo "✅ Windows build complete: pw-equip-gui.exe"
+        echo "✅ Windows build complete: pw-equip-changer.exe"
         ;;
     *)
         echo "Unknown OS: $OS"
