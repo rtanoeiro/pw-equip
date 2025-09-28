@@ -1,18 +1,14 @@
 package equip
 
 import (
-	"fmt"
-	"log"
 	"time"
 
 	"github.com/go-vgo/robotgo"
 )
 
 func ClickButton(button string) {
-	errorPress := robotgo.KeyPress(button)
-	if errorPress != nil {
-		log.Println("Erro ao pressionar botao", button)
-	}
+	robotgo.KeyPress(button)
+	// Note: Errors are silently ignored to prevent console output in GUI mode
 }
 
 func ChangeItems(equipSetup *SetupEquip) {
@@ -25,7 +21,6 @@ func ChangeItems(equipSetup *SetupEquip) {
 		}
 		ClickButton(equipSetup.KeyChange)
 		equipSetup.CurrentSet = 2
-		fmt.Println("Set trocado com sucesso para o segundo")
 	}
 
 	if equipSetup.CurrentSet == 2 {
@@ -36,7 +31,6 @@ func ChangeItems(equipSetup *SetupEquip) {
 		}
 		ClickButton(equipSetup.KeyChange)
 		ClickButton(equipSetup.KeyChange)
-		fmt.Println("Set trocado com sucesso para o primeiro")
 		equipSetup.CurrentSet = 1
 	}
 }
