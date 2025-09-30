@@ -2,9 +2,7 @@ package equip
 
 import (
 	"crypto/md5"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"runtime"
 	"time"
@@ -12,10 +10,7 @@ import (
 	"github.com/shirou/gopsutil/v4/host"
 )
 
-// SubscriptionResponse represents the API response structure
-type SubscriptionResponse struct {
-	Status bool `json:"status"`
-}
+var MaxRetries = 3
 
 // GetHWID generates a unique hardware ID for the current machine
 func GetHWID() (string, error) {
@@ -41,63 +36,26 @@ func GetHWID() (string, error) {
 }
 
 // CheckSubscription verifies if the current machine has an active subscription
-func CheckSubscription() (bool, error) {
-	// Get HWID
-	hwid, err := GetHWID()
-	if err != nil {
-		return false, fmt.Errorf("failed to generate HWID: %v", err)
-	}
-
+func CheckSubscription(email, hwid string) (bool, error) {
 	// Create HTTP client with timeout
 	client := &http.Client{
 		Timeout: 10 * time.Second,
 	}
 
 	// Make GET request to subscription API
-	url := fmt.Sprintf("http://200.1.1.1/subscription?hwid=%s", hwid)
+	url := fmt.Sprintf("http://gamedevforge.ovh/validate-user?email=%s&hwid=%s", email, hwid)
 	resp, err := client.Get(url)
 	if err != nil {
-		return false, fmt.Errorf("failed to check subscription: %v", err)
+		return false, fmt.Errorf("falha ao checar usuario: %v", err)
 	}
 	defer resp.Body.Close()
 
 	// Check if request was successful
 	if resp.StatusCode != http.StatusOK {
-		return false, fmt.Errorf("subscription API returned status: %d", resp.StatusCode)
+		return false, fmt.Errorf("validacao de usuario API retornou status: %d", resp.StatusCode)
 	}
 
-	// Read response body
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return false, fmt.Errorf("failed to read response: %v", err)
-	}
-
-	// Parse JSON response
-	var subscriptionResp SubscriptionResponse
-	if err := json.Unmarshal(body, &subscriptionResp); err != nil {
-		return false, fmt.Errorf("failed to parse response: %v", err)
-	}
-
-	return subscriptionResp.Status, nil
-}
-
-// ValidateSubscriptionWithRetry checks subscription with retry logic
-func ValidateSubscriptionWithRetry(maxRetries int) (bool, error) {
-	var lastErr error
-
-	for i := 0; i < maxRetries; i++ {
-		isActive, err := CheckSubscription()
-		if err == nil {
-			return isActive, nil
-		}
-
-		lastErr = err
-		if i < maxRetries-1 {
-			time.Sleep(time.Duration(i+1) * time.Second) // Exponential backoff
-		}
-	}
-
-	return false, fmt.Errorf("subscription check failed after %d retries: %v", maxRetries, lastErr)
+	return true, nil
 }
 
 // DisplayHWID shows the current machine's HWID for debugging/registration purposes

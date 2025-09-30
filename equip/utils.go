@@ -18,7 +18,8 @@ func ClickButton(button string) {
 }
 
 func ChangeItems(equipSetup *SetupEquip) {
-	if equipSetup.CurrentSet == 1 {
+	switch equipSetup.CurrentSet {
+	case 1:
 		ClickButton(equipSetup.KeyChange)
 		ClickButton(equipSetup.KeyChange)
 		for _, itemToPress := range equipSetup.ItemKeys {
@@ -27,9 +28,7 @@ func ChangeItems(equipSetup *SetupEquip) {
 		}
 		ClickButton(equipSetup.KeyChange)
 		equipSetup.CurrentSet = 2
-	}
-
-	if equipSetup.CurrentSet == 2 {
+	case 2:
 		ClickButton(equipSetup.KeyChange)
 		for _, itemToPress := range equipSetup.ItemKeys {
 			ClickButton(itemToPress)

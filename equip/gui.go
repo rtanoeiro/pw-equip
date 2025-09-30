@@ -3,7 +3,6 @@ package equip
 import (
 	"fmt"
 	"strconv"
-	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -21,7 +20,7 @@ type GuiApp struct {
 func NewGuiApp() *GuiApp {
 	myApp := app.New()
 	myWindow := myApp.NewWindow("PW Equipment Changer")
-	myWindow.Resize(fyne.NewSize(1200, 900))
+	myWindow.Resize(fyne.NewSize(600, 400))
 
 	return &GuiApp{
 		app:    myApp,
@@ -34,6 +33,11 @@ func (g *GuiApp) RunGUI() {
 	// Title
 	title := widget.NewLabel("Bem vindo ao seu auxilio de troca de set")
 	title.TextStyle.Bold = true
+
+	hwid, err := GetHWID()
+	if err != nil {
+		hwid = "Erro ao obter HWID"
+	}
 
 	// Instructions
 	instructions := widget.NewRichTextFromMarkdown(`
@@ -55,8 +59,6 @@ func (g *GuiApp) RunGUI() {
 
 	// Email status label
 	emailStatusLabel := widget.NewLabel("")
-
-	// Goroutine 1: Handle email validation and local saving
 	emailEntry.OnChanged = func(email string) {
 		if email == "" {
 			emailStatusLabel.SetText("")
@@ -76,7 +78,6 @@ func (g *GuiApp) RunGUI() {
 		}
 	}
 
-	// Goroutine 2: Register email with HWID when submitted (Enter pressed)
 	emailEntry.OnSubmitted = func(email string) {
 		if !IsValidEmail(email) {
 			emailStatusLabel.SetText("❌ Email inválido")
@@ -84,12 +85,6 @@ func (g *GuiApp) RunGUI() {
 		}
 
 		emailStatusLabel.SetText("🔄 Registrando email...")
-
-		hwid, err := GetHWID()
-		if err != nil {
-			emailStatusLabel.SetText("⚠️ Erro ao obter HWID: " + err.Error())
-			return
-		}
 
 		errorRegister := RegisterEmailWithHWID(email, hwid)
 		if errorRegister != nil {
@@ -107,7 +102,7 @@ func (g *GuiApp) RunGUI() {
 	keyShiftEntry.SetPlaceHolder("Digite 'v' ou '`'")
 
 	timeClicksEntry := widget.NewEntry()
-	timeClicksEntry.SetPlaceHolder("Tempo em segundos")
+	timeClicksEntry.SetPlaceHolder("Tempo em milisegundos. Exemplo: 1000 = 1 segundo. 200 = 0.2 segundos, quando menor, mais rapido.")
 
 	// Dynamic item keys container
 	itemKeysContainer := container.NewVBox()
@@ -204,37 +199,35 @@ func (g *GuiApp) RunGUI() {
 		statusLabel.SetText("Verificando assinatura...")
 		startButton.SetText("Verificando...")
 
-		go func() {
-			// Check subscription with retry
-			isActive, err := ValidateSubscriptionWithRetry(3)
-			if err != nil {
-				statusLabel.SetText(fmt.Sprintf("Erro ao verificar assinatura: %v", err))
-				startButton.SetText("Iniciar Monitoramento")
-				return
-			}
+		// Check subscription with retry
+		isActive, err := CheckSubscription(email, hwid)
+		if err != nil {
+			statusLabel.SetText(fmt.Sprintf("Erro ao verificar assinatura: %v", err))
+			startButton.SetText("Iniciar Monitoramento")
+			return
+		}
 
-			if !isActive {
-				statusLabel.SetText("Assinatura inativa. Entre em contato com o suporte.")
-				startButton.SetText("Iniciar Monitoramento")
-				return
-			}
+		if !isActive {
+			statusLabel.SetText("Assinatura invalida. Entre em contato com o suporte.")
+			startButton.SetText("Iniciar Monitoramento")
+			return
+		}
 
-			// Setup configuration
-			g.setup = &SetupEquip{
-				NumberItems: numItems,
-				KeyChange:   keyShift,
-				TimeClicks:  timeClicks,
-				ItemKeys:    itemKeys,
-				CurrentSet:  1,
-			}
+		// Setup configuration
+		g.setup = &SetupEquip{
+			NumberItems: numItems,
+			KeyChange:   keyShift,
+			TimeClicks:  timeClicks,
+			ItemKeys:    itemKeys,
+			CurrentSet:  1,
+		}
 
-			statusLabel.SetText("Assinatura ativa! Monitoramento iniciado. Pressione Q para trocar de set.")
-			startButton.SetText("Parar Monitoramento")
+		statusLabel.SetText("Assinatura ativa! Monitoramento iniciado. Pressione Q para trocar de set.")
+		startButton.SetText("Parar Monitoramento")
 
-			// Start monitoring in a goroutine
-			stopMonitoring = make(chan bool)
-			go g.startMonitoring(statusLabel, startButton, stopMonitoring)
-		}()
+		// Start monitoring in a goroutine
+		stopMonitoring = make(chan bool)
+		go g.startMonitoring(statusLabel, stopMonitoring)
 	})
 
 	// Form layout
@@ -245,7 +238,7 @@ func (g *GuiApp) RunGUI() {
 			widget.NewFormItem("Email usado na compra do programa:", container.NewVBox(emailEntry, emailStatusLabel)),
 			widget.NewFormItem("Quantos items deseja trocar?", numItemsEntry),
 			widget.NewFormItem("Tecla para mudar barras de skills:", keyShiftEntry),
-			widget.NewFormItem("Tempo entre clicks (segundos):", timeClicksEntry),
+			widget.NewFormItem("Tempo entre clicks (em milisegundos):", timeClicksEntry),
 		),
 		widget.NewLabel("Teclas dos Items:"),
 		itemKeysContainer,
@@ -260,7 +253,7 @@ func (g *GuiApp) RunGUI() {
 	g.window.ShowAndRun()
 }
 
-func (g *GuiApp) startMonitoring(statusLabel *widget.Label, startButton *widget.Button, stopChan chan bool) {
+func (g *GuiApp) startMonitoring(statusLabel *widget.Label, stopChan chan bool) {
 	evChan := hook.Start()
 	defer hook.End()
 
@@ -272,7 +265,6 @@ func (g *GuiApp) startMonitoring(statusLabel *widget.Label, startButton *widget.
 			if ev.Kind == hook.KeyDown && ev.Keycode == 16 { // Q key
 				statusLabel.SetText("Trocando set...")
 				ChangeItems(g.setup)
-				time.Sleep(time.Duration(g.setup.TimeClicks) * time.Second)
 				statusLabel.SetText("Set trocado! Pressione Q novamente para trocar.")
 			}
 		}
