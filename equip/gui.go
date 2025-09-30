@@ -21,7 +21,7 @@ type GuiApp struct {
 func NewGuiApp() *GuiApp {
 	myApp := app.New()
 	myWindow := myApp.NewWindow("PW Equipment Changer")
-	myWindow.Resize(fyne.NewSize(500, 600))
+	myWindow.Resize(fyne.NewSize(1200, 900))
 
 	return &GuiApp{
 		app:    myApp,
@@ -44,6 +44,60 @@ func (g *GuiApp) RunGUI() {
 - Na ultima barra, deixe os Equipamentos de defesa
 - Para trocar de set aperte a tecla Q!
 	`)
+
+	emailEntry := widget.NewEntry()
+	emailEntry.SetPlaceHolder("Digite seu email usado na compra do programa")
+
+	// Load saved email
+	if savedEmail, err := LoadEmail(); err == nil && savedEmail != "" {
+		emailEntry.SetText(savedEmail)
+	}
+
+	// Email status label
+	emailStatusLabel := widget.NewLabel("")
+
+	// Goroutine 1: Handle email validation and local saving
+	emailEntry.OnChanged = func(email string) {
+		if email == "" {
+			emailStatusLabel.SetText("")
+			return
+		}
+
+		if !IsValidEmail(email) {
+			emailStatusLabel.SetText("❌ Email inválido")
+			return
+		}
+
+		emailStatusLabel.SetText("✅ Email válido - Pressione Enter para registrar")
+
+		if err := SaveEmail(email); err != nil {
+			// Handle error silently or log it
+			fmt.Printf("Error saving email: %v\n", err)
+		}
+	}
+
+	// Goroutine 2: Register email with HWID when submitted (Enter pressed)
+	emailEntry.OnSubmitted = func(email string) {
+		if !IsValidEmail(email) {
+			emailStatusLabel.SetText("❌ Email inválido")
+			return
+		}
+
+		emailStatusLabel.SetText("🔄 Registrando email...")
+
+		hwid, err := GetHWID()
+		if err != nil {
+			emailStatusLabel.SetText("⚠️ Erro ao obter HWID: " + err.Error())
+			return
+		}
+
+		errorRegister := RegisterEmailWithHWID(email, hwid)
+		if errorRegister != nil {
+			emailStatusLabel.SetText("⚠️ Erro no registro: " + errorRegister.Error())
+		} else {
+			emailStatusLabel.SetText("✅ Email registrado com sucesso")
+		}
+	}
 
 	// Form fields
 	numItemsEntry := widget.NewEntry()
@@ -106,6 +160,13 @@ func (g *GuiApp) RunGUI() {
 			}
 			statusLabel.SetText("Monitoramento parado.")
 			startButton.SetText("Iniciar Monitoramento")
+			return
+		}
+
+		// Validate email first
+		email := emailEntry.Text
+		if !IsValidEmail(email) {
+			statusLabel.SetText("Erro: Digite um email válido")
 			return
 		}
 
@@ -181,6 +242,7 @@ func (g *GuiApp) RunGUI() {
 		title,
 		instructions,
 		widget.NewForm(
+			widget.NewFormItem("Email usado na compra do programa:", container.NewVBox(emailEntry, emailStatusLabel)),
 			widget.NewFormItem("Quantos items deseja trocar?", numItemsEntry),
 			widget.NewFormItem("Tecla para mudar barras de skills:", keyShiftEntry),
 			widget.NewFormItem("Tempo entre clicks (segundos):", timeClicksEntry),
