@@ -1,11 +1,8 @@
 name: Build Windows
 
 on:
-    workflow_run:
-        workflows: ["CD"]
+    push:
         branches: [main]
-        types: 
-            - completed
       
 jobs:
   build:
