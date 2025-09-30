@@ -2,6 +2,7 @@ package equip
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 
 	"fyne.io/fyne/v2"
@@ -21,6 +22,13 @@ func NewGuiApp() *GuiApp {
 	myApp := app.New()
 	myWindow := myApp.NewWindow("PW Equipment Changer")
 	myWindow.Resize(fyne.NewSize(900, 600))
+
+	iconPath, err := os.ReadFile("media/icon.jpg")
+	if err != nil {
+		fyne.LogError("Error reading icon.png", err)
+	}
+	iconResource := fyne.NewStaticResource("icon.png", iconPath)
+	myWindow.SetIcon(iconResource)
 
 	return &GuiApp{
 		app:    myApp,
