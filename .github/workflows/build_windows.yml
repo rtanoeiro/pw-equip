@@ -24,8 +24,9 @@ jobs:
       - name: Upload Windows
         uses: actions/upload-artifact@v4
         with:
-          path: .
+          path: pw-equip-changer.exe
           name: pw-equip-changer.exe
+          overwrite: true
         
         
         
