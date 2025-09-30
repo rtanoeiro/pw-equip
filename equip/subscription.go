@@ -35,27 +35,82 @@ func GetHWID() (string, error) {
 	return hwid, nil
 }
 
-// CheckSubscription verifies if the current machine has an active subscription
-func CheckSubscription(email, hwid string) (bool, error) {
-	// Create HTTP client with timeout
+func RegisterEmailWithHWID(email string, hwid string) User {
 	client := &http.Client{
 		Timeout: 10 * time.Second,
 	}
+	user := User{Email: email, Hwid: hwid, Active: false, Error: ""}
+
+	request, err := http.NewRequest("POST", fmt.Sprintf("http://gamedevforge.ovh/register-user?email=%s&hwid=%s", email, hwid), nil)
+	if err != nil {
+		user.Error = fmt.Sprintf("falha ao criar requisição: %v", err)
+		return user
+	}
+
+	request.Header.Set("Content-Type", "text/plain")
+	response, err := client.Do(request)
+	if err != nil {
+		return user
+	}
+
+	switch response.StatusCode {
+	case http.StatusOK:
+		user.Active = true
+		return user
+	case http.StatusCreated:
+		user.Active = true
+		return user
+	case http.StatusForbidden:
+		user.Active = false
+		user.Error = "HWID diferente do registrado, desvincule o HWID atual e registre novamente nesse PC"
+		return user
+	case http.StatusInternalServerError:
+		user.Active = false
+		user.Error = "Erro no registro do usuário, por favor, tente novamente ou contate o suporte"
+		return user
+	default:
+		user.Active = false
+		user.Error = "Erro no registro do usuario, por favor, tente novamente ou contate o suporte"
+		return user
+	}
+}
+
+// CheckSubscription verifies if the current machine has an active subscription
+func CheckSubscription(email, hwid string) User {
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+	user := User{Email: email, Hwid: hwid, Active: false, Error: ""}
 
 	// Make GET request to subscription API
 	url := fmt.Sprintf("http://gamedevforge.ovh/validate-user?email=%s&hwid=%s", email, hwid)
-	resp, err := client.Get(url)
+	response, err := client.Get(url)
 	if err != nil {
-		return false, fmt.Errorf("falha ao checar usuario: %v", err)
-	}
-	defer resp.Body.Close()
-
-	// Check if request was successful
-	if resp.StatusCode != http.StatusOK {
-		return false, fmt.Errorf("validacao de usuario API retornou status: %d", resp.StatusCode)
+		user.Error = fmt.Sprintf("falha ao checar usuario: %v", err)
+		return user
 	}
 
-	return true, nil
+	switch response.StatusCode {
+	case http.StatusOK:
+		user.Active = true
+		return user
+	case http.StatusForbidden:
+		user.Active = false
+		user.Error = "HWID diferente do registrado, desvincule o HWID atual e tente novamente"
+		return user
+	case http.StatusInternalServerError:
+		user.Active = false
+		user.Error = "Erro ao receber dados do usuário, por favor, tente novamente ou contate o suporte"
+		return user
+	case http.StatusNotFound:
+		user.Active = false
+		user.Error = "Erro ao receber dados do usuário, por favor, tente novamente ou contate o suporte"
+		return user
+	default:
+		user.Active = false
+		user.Error = "Erro ao receber dados do usuário, por favor, tente novamente ou contate o suporte"
+		return user
+	}
 }
 
 // DisplayHWID shows the current machine's HWID for debugging/registration purposes

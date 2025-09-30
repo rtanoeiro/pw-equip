@@ -86,11 +86,11 @@ func (g *GuiApp) RunGUI() {
 
 		emailStatusLabel.SetText("🔄 Registrando email...")
 
-		errorRegister := RegisterEmailWithHWID(email, hwid)
-		if errorRegister != nil {
-			emailStatusLabel.SetText("⚠️ Erro no registro: " + errorRegister.Error())
-		} else {
+		user := RegisterEmailWithHWID(email, hwid)
+		if user.Active {
 			emailStatusLabel.SetText("✅ Email registrado com sucesso")
+		} else {
+			emailStatusLabel.SetText(user.Error)
 		}
 	}
 
@@ -136,12 +136,14 @@ func (g *GuiApp) RunGUI() {
 	// HWID display (for support purposes)
 	hwidLabel := widget.NewLabel("Carregando HWID...")
 	go func() {
-		hwid, err := GetHWID()
-		if err == nil {
-			hwidLabel.SetText(fmt.Sprintf("HWID: %s", hwid))
-		} else {
-			hwidLabel.SetText("Erro ao obter HWID")
-		}
+		fyne.Do(func() {
+			hwid, err := GetHWID()
+			if err == nil {
+				hwidLabel.SetText(fmt.Sprintf("HWID: %s", hwid))
+			} else {
+				hwidLabel.SetText("Erro ao obter HWID")
+			}
+		})
 	}()
 
 	// Start button
@@ -200,15 +202,9 @@ func (g *GuiApp) RunGUI() {
 		startButton.SetText("Verificando...")
 
 		// Check subscription with retry
-		isActive, err := CheckSubscription(email, hwid)
-		if err != nil {
-			statusLabel.SetText(fmt.Sprintf("Erro ao verificar assinatura: %v", err))
-			startButton.SetText("Iniciar Monitoramento")
-			return
-		}
-
-		if !isActive {
-			statusLabel.SetText("Assinatura invalida. Entre em contato com o suporte.")
+		user := CheckSubscription(email, hwid)
+		if !user.Active {
+			statusLabel.SetText(user.Error)
 			startButton.SetText("Iniciar Monitoramento")
 			return
 		}
