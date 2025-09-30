@@ -1,7 +1,10 @@
 package main
 
-import "pw-equip-change/equip"
+import (
+	"pw-equip-change/equip"
+)
 
 func main() {
-	equip.Run()
+	app := equip.NewGuiApp()
+	app.RunGUI()
 }

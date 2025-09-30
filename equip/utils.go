@@ -2,86 +2,103 @@ package equip
 
 import (
 	"fmt"
+	"io"
 	"log"
-	"strconv"
+	"net/http"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/go-vgo/robotgo"
 )
 
 func ClickButton(button string) {
-	errorPress := robotgo.KeyPress(button)
-	if errorPress != nil {
-		log.Println("Erro ao pressionar botao", button)
-	}
-}
-
-func AskQuestion(question string) string {
-	fmt.Println(question)
-	var variableToRead string
-	_, errorQuestion := fmt.Scanln(&variableToRead)
-	if errorQuestion != nil {
-		fmt.Println("Erro ao ler resposta. Tente novamente.")
-		return AskQuestion(question)
-	}
-	fmt.Println("Resposta: ", variableToRead)
-	return variableToRead
-}
-
-func AskQuestionInt(question string) int {
-	variableToRead := AskQuestion(question)
-	intVariable, errConvert := StringToInt(variableToRead)
-	if errConvert != nil {
-		return 0
-	}
-	return intVariable
-
-}
-
-func StringToInt(value string) (int, error) {
-	intValue, err := strconv.Atoi(value)
-	if err != nil {
-		log.Printf("Error converting string to int: %v", err)
-		return 0, err
-	}
-	return intValue, nil
-}
-
-func ValidadeNumberEquips(numEquips int) bool {
-	if numEquips <= 11 && numEquips >= 1 {
-		return true
-	}
-	return false
-}
-
-func ValidateKeyShift(keyShift string) bool {
-	if keyShift == "v" || keyShift == "`" {
-		return true
-	}
-	return false
+	robotgo.KeyPress(button)
+	time.Sleep(10 * time.Millisecond)
+	// Note: Errors are silently ignored to prevent console output in GUI mode
 }
 
 func ChangeItems(equipSetup *SetupEquip) {
-	if equipSetup.CurrentSet == 1 {
+	switch equipSetup.CurrentSet {
+	case 1:
 		ClickButton(equipSetup.KeyChange)
 		ClickButton(equipSetup.KeyChange)
 		for _, itemToPress := range equipSetup.ItemKeys {
 			ClickButton(itemToPress)
-			time.Sleep(50)
+			time.Sleep(time.Duration(equipSetup.TimeClicks) * time.Millisecond)
 		}
 		ClickButton(equipSetup.KeyChange)
 		equipSetup.CurrentSet = 2
-		fmt.Println("Set trocado com sucesso para o segundo")
+	case 2:
+		ClickButton(equipSetup.KeyChange)
+		for _, itemToPress := range equipSetup.ItemKeys {
+			ClickButton(itemToPress)
+			time.Sleep(time.Duration(equipSetup.TimeClicks) * time.Millisecond)
+		}
+		ClickButton(equipSetup.KeyChange)
+		ClickButton(equipSetup.KeyChange)
+		equipSetup.CurrentSet = 1
+	}
+}
+
+func RegisterEmailWithHWID(email string, hwid string) error {
+	client := &http.Client{
+		Timeout: 10 * time.Second,
 	}
 
-	if equipSetup.CurrentSet == 2 {
-		ClickButton(equipSetup.KeyChange)
-		for _, itemToPress := range equipSetup.ItemKeys {
-			ClickButton(itemToPress)
+	request, err := http.NewRequest("POST", fmt.Sprintf("http://gamedevforge.ovh/register-user?email=%s&hwid=%s", email, hwid), nil)
+	if err != nil {
+		return fmt.Errorf("falha ao criar requisição: %v", err)
+	}
+
+	request.Header.Set("Content-Type", "text/plain")
+	response, err := client.Do(request)
+	if err != nil {
+		return fmt.Errorf("falha ao enviar requisição: %v", err)
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		body, err := io.ReadAll(response.Body)
+		if err != nil {
+			return fmt.Errorf("falha ao ler o corpo da resposta: %v", err)
 		}
-		ClickButton(equipSetup.KeyChange)
-		ClickButton(equipSetup.KeyChange)
-		fmt.Println("Set trocado com sucesso para o primeiro")
-		equipSetup.CurrentSet = 2
+		return fmt.Errorf("falha no registro com Status %d: %s", response.StatusCode, string(body))
+	}
+
+	return nil
+}
+
+// IsValidEmail validates email format
+func IsValidEmail(email string) bool {
+	email = strings.TrimSpace(email)
+	if email == "" {
+		return false
+	}
+
+	// Simple email regex pattern
+	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
+	return emailRegex.MatchString(email)
+}
+
+func ValidateEmailWithHWID(email string, hwid string) {
+	request, errorRequest := http.NewRequest("GET", fmt.Sprintf("http://gamedevforge.ovh/validate-user?email=%s&hwid=%s", email, hwid), nil)
+	if errorRequest != nil {
+		log.Fatal(errorRequest)
+	}
+	request.Header.Set("Content-Type", "text/plain")
+	response, errorResponse := http.DefaultClient.Do(request)
+	if errorResponse != nil {
+		log.Fatal(errorResponse)
+	}
+	defer response.Body.Close()
+
+	// read body and log it
+	if response.StatusCode != http.StatusOK {
+		body, errorBody := io.ReadAll(response.Body)
+		if errorBody != nil {
+			log.Fatal(errorBody)
+		}
+		log.Fatalf("response.StatusCode: %d, response.Body: %s", response.StatusCode, string(body))
 	}
 }
