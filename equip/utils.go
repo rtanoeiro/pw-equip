@@ -12,6 +12,13 @@ import (
 	"github.com/go-vgo/robotgo"
 )
 
+type User struct {
+	Email  string
+	Hwid   string
+	Active bool
+	Error  string
+}
+
 func ClickButton(button string) {
 	robotgo.KeyPress(button)
 	time.Sleep(10 * time.Millisecond)
@@ -41,32 +48,44 @@ func ChangeItems(equipSetup *SetupEquip) {
 	}
 }
 
-func RegisterEmailWithHWID(email string, hwid string) error {
+func RegisterEmailWithHWID(email string, hwid string) User {
 	client := &http.Client{
 		Timeout: 10 * time.Second,
 	}
+	user := User{Email: email, Hwid: hwid, Active: false, Error: ""}
 
 	request, err := http.NewRequest("POST", fmt.Sprintf("http://gamedevforge.ovh/register-user?email=%s&hwid=%s", email, hwid), nil)
 	if err != nil {
-		return fmt.Errorf("falha ao criar requisição: %v", err)
+		user.Error = fmt.Sprintf("falha ao criar requisição: %v", err)
+		return user
 	}
 
 	request.Header.Set("Content-Type", "text/plain")
 	response, err := client.Do(request)
 	if err != nil {
-		return fmt.Errorf("falha ao enviar requisição: %v", err)
-	}
-	defer response.Body.Close()
-
-	if response.StatusCode != http.StatusOK {
-		body, err := io.ReadAll(response.Body)
-		if err != nil {
-			return fmt.Errorf("falha ao ler o corpo da resposta: %v", err)
-		}
-		return fmt.Errorf("falha no registro com Status %d: %s", response.StatusCode, string(body))
+		return user
 	}
 
-	return nil
+	switch response.StatusCode {
+	case http.StatusOK:
+		user.Active = true
+		return user
+	case http.StatusCreated:
+		user.Active = true
+		return user
+	case http.StatusForbidden:
+		user.Active = false
+		user.Error = "HWID diferente do registrado"
+		return user
+	case http.StatusInternalServerError:
+		user.Active = false
+		user.Error = "Erro ao criar usuário, tente novamente"
+		return user
+	default:
+		user.Active = false
+		user.Error = "Falha no registro do usuario, tente novamente"
+		return user
+	}
 }
 
 // IsValidEmail validates email format
