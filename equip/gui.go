@@ -20,7 +20,7 @@ type GuiApp struct {
 func NewGuiApp() *GuiApp {
 	myApp := app.New()
 	myWindow := myApp.NewWindow("PW Equipment Changer")
-	myWindow.Resize(fyne.NewSize(600, 400))
+	myWindow.Resize(fyne.NewSize(900, 600))
 
 	return &GuiApp{
 		app:    myApp,
