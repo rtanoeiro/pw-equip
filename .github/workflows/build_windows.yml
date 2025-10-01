@@ -26,7 +26,7 @@ jobs:
 
       - name: Get Release Version
         id: get_version
-        run: echo "VERSION=$(type version.txt)" >> $env:GITHUB_ENV
+        run: echo "VERSION=$(Get-Content version.txt)" >> $env:GITHUB_ENV
 
       - name: Build Windows
         run: fyne package -os windows --name pw-equip-changer.exe -icon media/icon.jpg -release --app-id ${{ env.VERSION }}
@@ -40,21 +40,30 @@ jobs:
 
   release:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
+    
+    permissions:
+      contents: write
+    
     steps:
+      - name: Check out code
+        uses: actions/checkout@v4
       - name: Download Artifacts
         uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
 
       - name: Get Release Version
         id: get_version
-        run: echo "VERSION=$(type version.txt)" >> $env:GITHUB_ENV
+        run: echo "VERSION=$(Get-Content version.txt)" >> $env:GITHUB_ENV
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: pw-equip-changer.exe
+          files: ./artifacts/pw-equip-changer-v${{ env.VERSION }}/pw-equip-changer.exe
           tag_name: v${{ env.VERSION }}
           name: Release v${{ env.VERSION }}
+          overwrite_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
