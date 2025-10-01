@@ -67,7 +67,36 @@ func (g *GuiApp) RunGUI() {
 
 	// Email status label
 	emailStatusLabel := widget.NewLabel("")
+
+	// Button state management
+	var startButton *widget.Button
+	var resetHWIDButton *widget.Button
+	var isEmailValid bool = false
+	var isSubscriptionValid bool = false
+
+	// Function to update button state
+	updateButtonState := func() {
+		if startButton != nil {
+			if isEmailValid && isSubscriptionValid {
+				startButton.Enable()
+			} else {
+				startButton.Disable()
+			}
+		}
+		if resetHWIDButton != nil {
+			if isEmailValid {
+				resetHWIDButton.Enable()
+			} else {
+				resetHWIDButton.Disable()
+			}
+		}
+	}
+
 	emailEntry.OnChanged = func(email string) {
+		isEmailValid = false
+		isSubscriptionValid = false
+		updateButtonState()
+
 		if email == "" {
 			emailStatusLabel.SetText("")
 			return
@@ -79,27 +108,61 @@ func (g *GuiApp) RunGUI() {
 		}
 
 		emailStatusLabel.SetText("✅ Email válido - Pressione Enter para registrar")
+		isEmailValid = true
 
 		if err := SaveEmail(email); err != nil {
 			// Handle error silently or log it
 			fmt.Printf("Error saving email: %v\n", err)
 		}
+
+		updateButtonState()
 	}
 
 	emailEntry.OnSubmitted = func(email string) {
 		if !IsValidEmail(email) {
 			emailStatusLabel.SetText("❌ Email inválido")
+			isEmailValid = false
+			isSubscriptionValid = false
+			updateButtonState()
 			return
 		}
 
 		emailStatusLabel.SetText("🔄 Registrando email...")
+		isSubscriptionValid = false
+		updateButtonState()
 
-		user := RegisterEmailWithHWID(email, hwid)
-		if user.Active {
-			emailStatusLabel.SetText("✅ Email registrado com sucesso")
-		} else {
-			emailStatusLabel.SetText(user.Error)
-		}
+		// Run registration and subscription check in goroutine
+		go func() {
+			fyne.Do(func() {
+				userReg := RegisterEmailWithHWID(email, hwid)
+
+				// Update UI in main thread
+				emailStatusLabel.SetText("🔄 Verificando assinatura...")
+
+				if userReg.Active {
+					// Check subscription
+					userSub := CheckSubscription(email, hwid)
+					if userSub.Error != "" {
+						emailStatusLabel.SetText("⚠️ Erro ao verificar assinatura: " + userSub.Error)
+						isSubscriptionValid = false
+					} else if userSub.Active {
+						emailStatusLabel.SetText("✅ Email registrado e assinatura ativa")
+						isEmailValid = true
+						isSubscriptionValid = true
+					} else {
+						emailStatusLabel.SetText("⚠️ Assinatura inválida: " + userSub.Error)
+						isEmailValid = true
+						isSubscriptionValid = false
+					}
+				} else {
+					emailStatusLabel.SetText("⚠️ " + userReg.Email + ": " + userReg.Error)
+					isEmailValid = false
+					isSubscriptionValid = false
+				}
+
+				updateButtonState()
+			})
+		}()
 	}
 
 	// Form fields
@@ -154,8 +217,7 @@ func (g *GuiApp) RunGUI() {
 		})
 	}()
 
-	// Start button
-	var startButton *widget.Button
+	// Start button (already declared above)
 	var stopMonitoring chan bool
 
 	startButton = widget.NewButton("Iniciar Monitoramento", func() {
@@ -172,6 +234,12 @@ func (g *GuiApp) RunGUI() {
 		email := emailEntry.Text
 		if !IsValidEmail(email) {
 			statusLabel.SetText("Erro: Digite um email válido")
+			return
+		}
+
+		// Check if email and subscription are valid (already verified)
+		if !isEmailValid || !isSubscriptionValid {
+			statusLabel.SetText("Erro: Email deve estar registrado e assinatura ativa")
 			return
 		}
 
@@ -214,6 +282,7 @@ func (g *GuiApp) RunGUI() {
 		if !user.Active {
 			statusLabel.SetText(user.Error)
 			startButton.SetText("Iniciar Monitoramento")
+			startButton.Disable()
 			return
 		}
 
@@ -226,6 +295,7 @@ func (g *GuiApp) RunGUI() {
 			CurrentSet:  1,
 		}
 
+		startButton.Enable()
 		statusLabel.SetText("Assinatura ativa! Monitoramento iniciado. Pressione Q para trocar de set.")
 		startButton.SetText("Parar Monitoramento")
 
@@ -233,6 +303,37 @@ func (g *GuiApp) RunGUI() {
 		stopMonitoring = make(chan bool)
 		go g.startMonitoring(statusLabel, stopMonitoring)
 	})
+
+	// Initialize button as disabled
+	startButton.Disable()
+
+	// Check if saved email is valid and has active subscription
+	if savedEmail, err := LoadEmail(); err == nil && savedEmail != "" && IsValidEmail(savedEmail) {
+		go func() {
+			fyne.Do(func() {
+				user := RegisterEmailWithHWID(savedEmail, hwid)
+				if user.Active {
+					userSub := CheckSubscription(savedEmail, hwid)
+					if err == nil && userSub.Active {
+						emailStatusLabel.SetText("✅ Email registrado e assinatura ativa")
+						isEmailValid = true
+						isSubscriptionValid = true
+						updateButtonState()
+					}
+				}
+			})
+		}()
+	}
+
+	resetHWIDButton = widget.NewButton("Resetar HWID", func() {
+		user := ResetHWID(emailEntry.Text, hwid)
+		if user.Active {
+			emailStatusLabel.SetText("✅ HWID resetado")
+		} else {
+			emailStatusLabel.SetText("⚠️ " + user.Error)
+		}
+	})
+	resetHWIDButton.Disable()
 
 	// Form layout
 	form := container.NewVBox(
@@ -249,6 +350,7 @@ func (g *GuiApp) RunGUI() {
 		startButton,
 		statusLabel,
 		widget.NewSeparator(),
+		resetHWIDButton,
 		hwidLabel,
 	)
 
