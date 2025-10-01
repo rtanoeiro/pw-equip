@@ -35,11 +35,21 @@ jobs:
           path: pw-equip-changer.exe
           overwrite: true
 
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          files: pw-equip-changer.exe
           tag_name: v${{ env.VERSION }}
           name: Release v${{ env.VERSION }}
-          files: pw-equip-changer.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
         
         
