@@ -45,6 +45,10 @@ jobs:
       - name: Download Artifacts
         uses: actions/download-artifact@v4
 
+      - name: Get Release Version
+        id: get_version
+        run: echo "VERSION=$(type version.txt)" >> $env:GITHUB_ENV
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
