@@ -141,7 +141,7 @@ func (g *GuiApp) RunGUI() {
 
 				if userReg.Active {
 					// Check subscription
-					userSub := CheckSubscription(email, hwid)
+					userSub := ValidadeUser(email, hwid)
 					if userSub.Error != "" {
 						emailStatusLabel.SetText("⚠️ Erro ao verificar assinatura: \n" + userSub.Error)
 						isSubscriptionValid = false
@@ -278,7 +278,7 @@ func (g *GuiApp) RunGUI() {
 		startButton.SetText("Verificando...")
 
 		// Check subscription with retry
-		user := CheckSubscription(email, hwid)
+		user := ValidadeUser(email, hwid)
 		if !user.Active {
 			statusLabel.SetText(user.Error)
 			startButton.SetText("Iniciar Monitoramento")
@@ -313,7 +313,7 @@ func (g *GuiApp) RunGUI() {
 			fyne.Do(func() {
 				user := RegisterEmailWithHWID(savedEmail, hwid)
 				if user.Active {
-					userSub := CheckSubscription(savedEmail, hwid)
+					userSub := ValidadeUser(savedEmail, hwid)
 					if err == nil && userSub.Active {
 						emailStatusLabel.SetText("✅ Email registrado e assinatura ativa")
 						isEmailValid = true
