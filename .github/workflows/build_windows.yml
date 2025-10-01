@@ -28,12 +28,14 @@ jobs:
       - name: Build Windows
         run: fyne package -os windows --name pw-equip-changer.exe -icon media/icon.jpg -release --app-id ${{ env.VERSION }}
       
-      - name: Upload Windows
-        uses: actions/upload-artifact@v4
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
         with:
-          path: pw-equip-changer.exe
-          name: pw-equip-changer.exe
-          overwrite: true
-        
+          tag_name: v${{ env.VERSION }}
+          draft: false
+          prerelease: false
+          files: pw-equip-changer.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}        
         
         
