@@ -143,14 +143,14 @@ func (g *GuiApp) RunGUI() {
 					// Check subscription
 					userSub := CheckSubscription(email, hwid)
 					if userSub.Error != "" {
-						emailStatusLabel.SetText("⚠️ Erro ao verificar assinatura: " + userSub.Error)
+						emailStatusLabel.SetText("⚠️ Erro ao verificar assinatura: \n" + userSub.Error)
 						isSubscriptionValid = false
 					} else if userSub.Active {
 						emailStatusLabel.SetText("✅ Email registrado e assinatura ativa")
 						isEmailValid = true
 						isSubscriptionValid = true
 					} else {
-						emailStatusLabel.SetText("⚠️ Assinatura inválida: " + userSub.Error)
+						emailStatusLabel.SetText("⚠️ Assinatura inválida: \n" + userSub.Error)
 						isEmailValid = true
 						isSubscriptionValid = false
 					}
