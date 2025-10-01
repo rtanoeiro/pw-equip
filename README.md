@@ -1,131 +1,207 @@
 # PW Equipment Changer
 
-Um aplicativo para trocar automaticamente equipamentos no Perfect World usando teclas de atalho.
+A GUI application for automatically switching equipment sets in Perfect World using hotkeys. The application features a modern subscription-based system with email registration and hardware ID validation.
 
-## Funcionalidades
+## 🎮 Features
 
-- Interface gráfica moderna usando Fyne
-- Interface de linha de comando (console)
-- **Sistema de assinatura SAAS** com verificação por HWID
-- Configuração de até 11 itens para troca
-- Tempo configurável entre cliques
-- Monitoramento de tecla Q para ativar a troca
-- Verificação automática de assinatura antes do uso
+- **Modern GUI Interface**: Built with Fyne framework for cross-platform compatibility
+- **Subscription System**: Email-based registration with HWID (Hardware ID) validation
+- **Equipment Set Switching**: Configure up to 11 items for automatic equipment changes
+- **Hotkey Activation**: Press `Q` to switch between equipment sets
+- **Configurable Timing**: Adjustable delay between item clicks
+- **Persistent Configuration**: Saves user email and settings locally
+- **Cross-Platform**: Supports Windows, macOS, and Linux
 
-## Como usar
+## 🏗️ Architecture
 
-### Interface Gráfica (Recomendado)
+The application is structured as follows:
 
-```bash
-./pw-equip-gui
+```
+pw-equip-change/
+├── main.go                 # Application entry point
+├── equip/                  # Core package
+│   ├── gui.go             # GUI interface and main application logic
+│   ├── models.go          # Data structures (SetupEquip)
+│   ├── subscription.go    # User registration and validation
+│   ├── utils.go           # Utility functions and automation
+│   └── config.go          # Configuration management
+├── media/
+│   └── icon.jpg           # Application icon
+├── .github/workflows/
+│   └── build_windows.yml  # GitHub Actions for Windows builds
+└── build.sh               # Multi-platform build script
 ```
 
-ou
+## 🚀 Installation & Usage
 
+### Download Pre-built Binary
+
+1. Download the latest release from the [Releases](https://github.com/your-repo/pw-equip-change/releases) page
+2. Run the executable: `pw-equip-changer.exe` (Windows) or `pw-equip-changer` (macOS/Linux)
+
+### Building from Source
+
+#### Prerequisites
+- Go 1.24.5 or later
+- Fyne dependencies for your platform
+
+#### Quick Build
 ```bash
-./pw-equip-gui -gui=true
-```
+# Clone the repository
+git clone <repository-url>
+cd pw-equip-change
 
-### Interface de Console
-
-```bash
-./pw-equip-gui -gui=false
-```
-
-### Mostrar HWID da Máquina
-
-```bash
-./pw-equip-gui -hwid
-```
-
-**Nota**: O HWID é necessário para ativar a assinatura. Entre em contato com o suporte fornecendo este código.
-
-## Configuração
-
-### Campos necessários:
-
-1. **Número de itens**: Quantos equipamentos você deseja trocar (1-11)
-2. **Tecla para mudar barras**: A tecla que muda as barras de skills (`v` ou `` ` ``)
-3. **Tempo entre cliques**: Tempo em milissegundos entre cada clique nos itens
-4. **Teclas dos itens**: As teclas correspondentes a cada item que será trocado
-
-### Instruções de setup:
-
-1. Deixe 3 barras livres para serem rotacionadas
-2. Em sua barra principal, deixe suas skills/boticários como deseja usá-los
-3. Se deseja iniciar com equipamentos de ataque, na segunda barra deixe os Equipamentos de ataque
-4. Na última barra, deixe os Equipamentos de defesa
-5. Para trocar de set, aperte a tecla **Q**!
-
-## Compilação
-
-### Compilação Simples
-```bash
-go build -o pw-equip-gui
-```
-
-### Compilação Multiplataforma
-```bash
-# Use o script de build automático
+# Build using the automated script
 ./build.sh
 ```
 
-### Para macOS - Evitar Janela do Terminal
-Se o Terminal abrir quando você clicar no executável no macOS:
-
+#### Manual Build
 ```bash
-# 1. Compile normalmente
-go build -o pw-equip-gui
+# Standard build
+go build -o pw-equip-changer
 
-# 2. Crie um App Bundle
-./create_app_bundle.sh
+# Windows (hide console window)
+go build -ldflags="-H windowsgui" -o pw-equip-changer.exe
 
-# 3. Use o arquivo .app gerado
+# Using Fyne packaging (recommended for distribution)
+fyne package -os windows --name pw-equip-changer.exe -icon media/icon.jpg -release
 ```
 
-### Para Windows - Evitar Janela do Console
-```bash
-# No Windows, use a flag especial
-go build -ldflags="-H windowsgui" -o pw-equip-gui.exe
+## ⚙️ Configuration
+
+### Initial Setup
+
+1. **Email Registration**: Enter the email used for purchasing the program
+2. **Equipment Configuration**:
+   - **Number of Items**: How many equipment pieces to swap (1-11)
+   - **Bar Change Key**: Key to switch skill bars (`v` or `` ` ``)
+   - **Click Timing**: Delay between clicks in milliseconds (e.g., 200ms = 0.2 seconds)
+   - **Item Keys**: Individual keys for each equipment piece
+
+### Game Setup Instructions
+
+1. **Prepare 3 Skill Bars**: Leave 3 bars available for rotation
+2. **Main Bar**: Set up your skills/potions as desired
+3. **Attack Set Bar**: Place attack equipment in the second bar
+4. **Defense Set Bar**: Place defense equipment in the third bar
+5. **Activation**: Press `Q` to switch between equipment sets
+
+## 🔐 Subscription System
+
+The application uses a robust subscription system:
+
+### Registration Process
+1. Enter your purchase email in the application
+2. The app generates a unique HWID based on your hardware
+3. Registration request is sent to `gamedevforge.ovh/register-user`
+4. Subscription validation occurs via `gamedevforge.ovh/validate-user`
+
+### HWID Management
+- **Hardware ID**: Unique identifier based on system information
+- **Reset Function**: Available if you need to change machines
+- **Security**: Prevents unauthorized usage across multiple devices
+
+### API Endpoints
+- `POST /register-user?email={email}&hwid={hwid}` - Register user with HWID
+- `GET /validate-user?email={email}&hwid={hwid}` - Validate subscription
+- `PATCH /reset-hwid?email={email}&hwid={hwid}` - Reset HWID for new machine
+
+## 🛠️ Development
+
+### Dependencies
+
+```go
+// Core dependencies
+fyne.io/fyne/v2 v2.6.3          // GUI framework
+github.com/go-vgo/robotgo        // Keyboard automation
+github.com/robotn/gohook         // Global hotkey capture
+github.com/shirou/gopsutil/v4    // System information for HWID
 ```
 
-## Sistema de Assinatura
+### Development Tools (mise.toml)
 
-O aplicativo requer uma assinatura ativa para funcionar. O sistema funciona da seguinte forma:
+```bash
+# Run tests
+mise run test
 
-1. **HWID (Hardware ID)**: Cada máquina possui um identificador único baseado em informações do hardware
-2. **Verificação**: Antes de iniciar o monitoramento, o app verifica se a assinatura está ativa
-3. **API**: Faz uma requisição GET para `http://200.1.1.1/subscription?hwid=<HWID>`
-4. **Resposta**: A API retorna `{"status": true/false}` indicando se a assinatura está ativa
+# Security checks
+mise run sec
 
-### Para ativar sua assinatura:
+# Format code
+mise run fmt
 
-1. Execute `./pw-equip-gui -hwid` para obter seu HWID
-2. Entre em contato com o suporte fornecendo o HWID
-3. Após a ativação, o aplicativo funcionará normalmente
+# Lint code
+mise run lint
 
-## Dependências
+# Run all checks
+mise run checks
 
-- [Fyne](https://fyne.io/) - Interface gráfica
-- [robotgo](https://github.com/go-vgo/robotgo) - Automação de teclado
-- [gohook](https://github.com/robotn/gohook) - Captura de teclas
-- [gopsutil](https://github.com/shirou/gopsutil) - Informações do sistema para HWID
+# Build
+mise run build
+```
 
-## Bibliotecas GUI Consideradas
+### Project Structure
 
-Durante o desenvolvimento, foram avaliadas as seguintes opções:
+- **main.go**: Simple entry point that initializes the GUI application
+- **equip/gui.go**: Main application logic, UI components, and event handling
+- **equip/models.go**: Data structures for equipment configuration
+- **equip/subscription.go**: User authentication and subscription validation
+- **equip/utils.go**: Automation functions and utility methods
+- **equip/config.go**: Configuration persistence (saves to `~/.pw-equip-change/config.json`)
 
-1. **[Fyne](https://github.com/fyne-io/fyne)** ✅ **Escolhida**
-   - Fácil de usar e aprender
-   - Excelente documentação
-   - Deploy em binário único
-   - Perfeita para formulários simples
+## 🔧 Technical Details
 
-2. **[GoVCL](https://github.com/ying32/govcl)**
-   - Interface nativa
-   - Requer arquivos DLL/SO externos
-   - Mais complexa para setup
+### Equipment Switching Logic
 
-3. **[Spot](https://github.com/roblillack/spot)**
-   - Abordagem moderna similar ao React
-   - Menos madura, comunidade menor
+The application implements a two-set rotation system:
+
+```go
+// Set 1 → Set 2: Navigate to attack equipment bar
+KeyChange → KeyChange → ClickItems → KeyChange
+
+// Set 2 → Set 1: Navigate to defense equipment bar  
+KeyChange → ClickItems → KeyChange → KeyChange
+```
+
+### HWID Generation
+
+Hardware ID is generated using:
+- Host ID
+- Platform information
+- Platform family
+- System architecture
+- MD5 hash for consistency
+
+### Configuration Storage
+
+User settings are stored in:
+- **Windows**: `%USERPROFILE%\.pw-equip-change\config.json`
+- **macOS/Linux**: `~/.pw-equip-change/config.json`
+
+## 🚀 CI/CD
+
+The project includes GitHub Actions for automated Windows builds:
+
+- **Trigger**: Push to main branch
+- **Environment**: Windows Latest with Go 1.24.5
+- **Output**: Windows executable with Fyne packaging
+- **Release**: Automatic GitHub release creation with version tagging
+
+## 📝 Version History
+
+Current version: **0.4** (see `version.txt`)
+
+## 🤝 Support
+
+For support and subscription activation:
+1. Run the application to get your HWID
+2. Contact support with your email and HWID
+3. Visit [gamedevforge.ovh](https://gamedevforge.ovh) for purchases
+
+## 📄 License
+
+This is a commercial application with subscription-based licensing.
+
+---
+
+**Note**: This application is specifically designed for Perfect World gameplay automation and requires an active subscription to function.
