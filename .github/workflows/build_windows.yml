@@ -21,13 +21,13 @@ jobs:
       - name: Set up Fyne
         run: go install fyne.io/tools/cmd/fyne@latest
 
-      - name: Read version
-        id: version
-        run: echo "VERSION=$(cat version.txt)" >> $GITHUB_OUTPUT
+      - name: Get Release Version
+        id: get_version
+        run: echo "RELEASE_VERSION=$(type release.txt)" >> $env:GITHUB_ENV
 
       - name: Build Windows
-        run: fyne package -os windows --name pw-equip-changer.exe -icon media/icon.jpg -release --app-id $${{ env.VERSION }}
-
+        run: fyne package -os windows --name pw-equip-changer.exe -icon media/icon.jpg -release --app-id ${{ env.RELEASE_VERSION }}
+      
       - name: Upload Windows
         uses: actions/upload-artifact@v4
         with:
