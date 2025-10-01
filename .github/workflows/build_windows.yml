@@ -23,10 +23,10 @@ jobs:
 
       - name: Get Release Version
         id: get_version
-        run: echo "RELEASE_VERSION=$(type release.txt)" >> $env:GITHUB_ENV
+        run: echo "VERSION=$(type version.txt)" >> $env:GITHUB_ENV
 
       - name: Build Windows
-        run: fyne package -os windows --name pw-equip-changer.exe -icon media/icon.jpg -release --app-id ${{ env.RELEASE_VERSION }}
+        run: fyne package -os windows --name pw-equip-changer.exe -icon media/icon.jpg -release --app-id ${{ env.VERSION }}
       
       - name: Upload Windows
         uses: actions/upload-artifact@v4
