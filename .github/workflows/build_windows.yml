@@ -23,10 +23,10 @@ jobs:
 
       - name: Read version
         id: version
-        run: echo "VERSION=$(cat version.txt | tr -d '\n')" >> $GITHUB_OUTPUT
+        run: echo "VERSION=$(cat version.txt)" >> $GITHUB_OUTPUT
 
       - name: Build Windows
-        run: fyne package -os windows --name pw-equip-changer.exe -icon media/icon.jpg -release --app-id ${{ steps.version.outputs.VERSION }}
+        run: fyne package -os windows --name pw-equip-changer.exe -icon media/icon.jpg -release --app-id $${{ env.VERSION }}
 
       - name: Upload Windows
         uses: actions/upload-artifact@v4
