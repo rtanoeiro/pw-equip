@@ -21,7 +21,7 @@ jobs:
       - name: Build Windows
         run: |
             go install fyne.io/tools/cmd/fyne@latest \
-            fyne package -os windows -icon media/icon.jpg -release
+            fyne package -os windows --name pw-equip-changer.exe -icon media/icon.jpg -release
 
       - name: Upload Windows
         uses: actions/upload-artifact@v4
