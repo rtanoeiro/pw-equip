@@ -38,7 +38,7 @@ func RegisterEmailWithHWID(email string, hwid string) User {
 	}
 	user := User{Email: email, Hwid: hwid, Active: false, Error: ""}
 
-	request, err := http.NewRequest("POST", fmt.Sprintf("http://gamedevforge.ovh/register-user?email=%s&hwid=%s", email, hwid), nil)
+	request, err := http.NewRequest("POST", fmt.Sprintf("https://gamedevforge.ovh/register-user?email=%s&hwid=%s", email, hwid), nil)
 	if err != nil {
 		user.Error = fmt.Sprintf("falha ao criar requisição: %v", err)
 		return user
@@ -83,7 +83,7 @@ func ValidadeUser(email, hwid string) User {
 	user := User{Email: email, Hwid: hwid, Active: false, Error: ""}
 
 	// Make GET request to subscription API
-	url := fmt.Sprintf("http://gamedevforge.ovh/validate-user?email=%s&hwid=%s", email, hwid)
+	url := fmt.Sprintf("https://gamedevforge.ovh/validate-user?email=%s&hwid=%s", email, hwid)
 	response, err := client.Get(url)
 	if err != nil {
 		user.Error = fmt.Sprintf("falha ao checar usuario: %v", err)
@@ -123,7 +123,7 @@ func ResetHWID(email, hwid string) User {
 	}
 	user := User{Email: email, Hwid: "", Active: false, Error: ""}
 
-	request, err := http.NewRequest("PATCH", fmt.Sprintf("http://gamedevforge.ovh/reset-hwid?email=%s&hwid=%s", email, hwid), nil)
+	request, err := http.NewRequest("PATCH", fmt.Sprintf("https://gamedevforge.ovh/reset-hwid?email=%s&hwid=%s", email, hwid), nil)
 	if err != nil {
 		user.Error = fmt.Sprintf("falha ao criar requisição: %v", err)
 		return user
