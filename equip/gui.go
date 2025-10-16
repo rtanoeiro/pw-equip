@@ -251,8 +251,8 @@ func (g *GuiApp) RunGUI() {
 		}
 
 		keyShift := keyShiftEntry.Text
-		if keyShift != "v" && keyShift != "`" {
-			statusLabel.SetText("Erro: Tecla deve ser 'v' ou '`'")
+		if keyShift != "v" && keyShift != "`" && keyShift != "'" {
+			statusLabel.SetText("Erro: Tecla deve ser *v* ou *`* ou *'*")
 			return
 		}
 
