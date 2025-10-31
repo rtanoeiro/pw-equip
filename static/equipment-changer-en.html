@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PW Equipment Changer - Perfect World</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <script src="https://unpkg.com/htmx.org@2.0.4/dist/ext/response-targets.js"></script>
+</head>
+<body hx-boost="true" hx-ext="response-targets">
+    <div class="container">
+        <div class="nav">
+            <a href="/" class="nav-back">← Back to Home</a>
+            <div class="nav-title">PW Equipment Changer</div>
+            <div class="language-selector">
+                <div class="language-toggle">
+                    <div class="language-flag" style="background-image: url('/static/icons/uk-flag-round-circle-icon.webp');"></div>
+                    <span>EN</span>
+                </div>
+                <div class="language-dropdown">
+                    <a href="/equipment-changer-en" class="language-option active">
+                        <div class="language-flag" style="background-image: url('/static/icons/uk-flag-round-circle-icon.webp');"></div>
+                        <span>English</span>
+                    </a>
+                    <a href="/equipment-changer" class="language-option">
+                        <div class="language-flag" style="background-image: url('/static/icons/brazil-flag-round-circle-icon.webp');"></div>
+                        <span>Português</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="video spacing">
+            <h2 class="section-title">See It In Action</h2>
+            <div class="video-placeholder">
+                <div class="video-screen">
+                    <iframe width="1000" height="700" src="https://www.youtube.com/embed/erQ5b6505wY">
+                    </iframe>
+                </div>
+            </div>
+            <p class="text-muted">Switch equipment sets with one key press</p>
+        </div>
+
+        <div class="grid grid-2 spacing">
+            <div class="item">
+                <div class="icon">🎯</div>
+                <h3>Multi-Hotbar</h3>
+                <p>3 hotbars: skills, defense, attack</p>
+            </div>
+            <div class="item">
+                <div class="icon">⚡</div>
+                <h3>Instant Switch</h3>
+                <p>Switch with Q key instantly</p>
+            </div>
+            <div class="item">
+                <div class="icon">⚙️</div>
+                <h3>Custom Timing</h3>
+                <p>Optimize click speed</p>
+            </div>
+        </div>
+
+        <div class="card spacing">
+            <h2 class="section-title">How It Works</h2>
+            <div class="step-list">
+                <div class="step-item">
+                    <div class="step-content">
+                        <h4>1. Setup Hotbars</h4>
+                        <p>3 hotbars: skills, defense, attack</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-content">
+                        <h4>2. Press Q</h4>
+                        <p>Switch instantly between sets</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-content">
+                        <h4>3. Auto Return</h4>
+                        <p>Back to skills after equipping</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-content">
+                        <h4>4. Optimize</h4>
+                        <p>Up to 11 items, adjust timing</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-2 spacing">
+            <div class="item">
+                <div class="icon">💎</div>
+                <h3>One-Time</h3>
+                <p>Buy once, use forever</p>
+            </div>
+            <div class="item">
+                <div class="icon">🛡️</div>
+                <h3>Secure</h3>
+                <p>Built with security focus</p>
+            </div>
+            <div class="item">
+                <div class="icon">🎮</div>
+                <h3>PW Optimized</h3>
+                <p>For Perfect World gameplay</p>
+            </div>
+        </div>
+
+        <div class="card spacing text-center">
+            <h2 class="section-title">Enhance Your Gameplay</h2>
+            <p class="text-large mb-30">Professional equipment switching system</p>
+            <div class="grid grid-2 mb-30">
+                <div class="feature-badge">✓ One-time</div>
+                <div class="feature-badge">✓ Updates</div>
+                <div class="feature-badge">✓ Download</div>
+                <div class="feature-badge">✓ Support</div>
+            </div>
+            <script async src="https://js.stripe.com/v3/buy-button.js">
+            </script>
+
+            <stripe-buy-button buy-button-id="buy_btn_1SHQTzQVkneHVuG1tSsktOil"
+                publishable-key="pk_live_51SCGKAQVkneHVuG1Htm6RXm5ubpWfl53ujrZQAVDTjoMb0BIehsduOh4t6GRnH0FdOCHTTfcEXAqqcSPZ9ZpuQsw00tD6tnpGu">
+            </stripe-buy-button>
+        </div>
+        <div class="card spacing text-center">
+            <a href="mailto:pwdevtools@gmail.com" class="btn large">Email</a>
+        </div>
+
+        <div class="footer">
+            <p>&copy; 2025 DevPW. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="/">Home</a>
+                <a href="#support">Support</a>
+                <a href="#contact">Contact</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
