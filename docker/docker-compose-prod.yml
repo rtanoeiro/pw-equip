@@ -62,7 +62,7 @@ services:
     networks:
       - docker_pw-network
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:${API_PORT}/health" ]
+      test: [ "CMD", "curl", "-f", "http://localhost:${API_PORT}/equip/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
