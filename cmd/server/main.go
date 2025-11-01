@@ -29,7 +29,7 @@ func main() {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 
-	r.Handle("/download/*", http.StripPrefix("/download/", http.FileServer(http.Dir("./download"))))
+	r.Handle("/equip/download/*", http.StripPrefix("/equip/download/", http.FileServer(http.Dir("./download"))))
 
 	// Pw Equip Changer Endpoints
 	r.Post("/equip/payment-events", equipCfg.HandlePaymentEvents)
