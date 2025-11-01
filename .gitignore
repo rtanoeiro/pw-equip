@@ -3,3 +3,4 @@ pw-equip-changer-v*
 download/*
 .env-*
 */tmp/
+bin/
