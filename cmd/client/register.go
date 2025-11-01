@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 )
@@ -18,6 +19,7 @@ func RegisterEmailWithHWID(email string, hwid string) User {
 		return user
 	}
 
+	log.Printf("Making %s request to %s", request.Method, request.URL.String())
 	request.Header.Set("Content-Type", "text/plain")
 	response, err := client.Do(request)
 	if err != nil {

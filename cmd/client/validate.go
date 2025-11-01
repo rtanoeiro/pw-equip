@@ -42,6 +42,7 @@ func ValidadeUser(email, hwid string) User {
 
 	// Make GET request to subscription API
 	url := fmt.Sprintf("%s?email=%s&hwid=%s", validateUserURL, email, hwid)
+	log.Printf("Validating user: %s with HWID: %s", email, hwid)
 	response, err := client.Get(url)
 	if err != nil {
 		user.Error = fmt.Sprintf("falha ao checar usuario: %v", err)
@@ -76,6 +77,7 @@ func ValidadeUser(email, hwid string) User {
 }
 
 func ValidateEmailWithHWID(email string, hwid string) {
+	log.Printf("Validating user: %s with HWID: %s", email, hwid)
 	request, errorRequest := http.NewRequest("GET", fmt.Sprintf("%s?email=%s&hwid=%s", validateUserURL, email, hwid), nil)
 	if errorRequest != nil {
 		log.Fatal(errorRequest)
