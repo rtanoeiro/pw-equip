@@ -1,3 +1,5 @@
 pw-equip-changer-v*
 .vscode/settings.json
 download/*
+.env-*
+*/tmp/
