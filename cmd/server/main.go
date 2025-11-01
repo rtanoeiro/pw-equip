@@ -4,16 +4,28 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"pw-equip-change/api"
+	"pw-equip-change/internal/api"
 
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
+	"github.com/joho/godotenv"
 )
 
 func main() {
-	equipCfg := api.EquipConfig{}
+	envFiles := []string{".env-dev", ".env-test", ".env-prod"}
+	var envFile string
+	for _, envFile := range envFiles {
+		err := godotenv.Load(envFile)
+		if err == nil {
+			break
+		}
+	}
+	log.Printf("Loaded environment variables from %s", envFile)
+
+	equipCfg := &api.EquipConfig{}
 	equipCfg.LoadEquipConfig()
 
+	log.Printf("EquipConfig: %+v", equipCfg)
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 
@@ -28,7 +40,7 @@ func main() {
 
 	// Start web server in a goroutine
 	addr := fmt.Sprintf(":%s", equipCfg.ApiPort)
-	log.Printf("Starting web server on port %s", equipCfg.ApiPort)
+	log.Printf("Starting web server on port %s", equipCfg.Config.ApiPort)
 	if err := http.ListenAndServe(addr, r); err != nil {
 		log.Fatalf("Failed to start web server: %v", err)
 	}

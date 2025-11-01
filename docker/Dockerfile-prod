@@ -8,23 +8,23 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . ./
-RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o pw-equip main.go
+RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o pw-equip ./cmd/server
 
 # Final image
 FROM alpine:3.22.0
 WORKDIR /app
+
+# Copy only the binary
 COPY --from=builder /app/pw-equip .
 
-COPY ../static ./static
-COPY ../templates ./templates
-COPY ../css ./css
-COPY ../.env-prod ./
-COPY ../download ./download
+# Copy download directory for file serving
+COPY download ./download
 
-RUN apk update && apk add mysql-client curl
+# Install runtime dependencies
+RUN apk update && apk add --no-cache mysql-client curl
 
-HEALTHCHECK --interval=30s --timeout=30s --retries=3 CMD curl -f http://localhost/equip/health
+HEALTHCHECK --interval=30s --timeout=30s --retries=3 CMD curl -f http://localhost:${API_PORT}/equip/health || exit 1
 
-EXPOSE 8080
+EXPOSE ${API_PORT}
 
 CMD ["./pw-equip"]

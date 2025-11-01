@@ -1,7 +1,8 @@
 [tools]
 "aqua:golangci/golangci-lint" = "latest"
+air = "latest"
 "aqua:securego/gosec" = "latest"
-go = "1.24.5"
+go = "1.25.2"
 
 [tasks.test]
 description = "Run tests with database migrations"
@@ -52,27 +53,27 @@ run = "sudo docker push rtanoeiro/pw-equip:dev"
 
 [tasks.run-dev]
 description = "Run Docker image"
-run = "sudo docker compose -f docker/docker-compose-dev.yml --env-file .env-dev up -d"
+run = "sudo docker compose -f docker/docker-compose-dev.yml --env-file cmd/server/.env-dev up -d"
 
 [tasks.run-test]
 description = "Run Docker image"
-run = "sudo docker compose -f docker/docker-compose-test.yml --env-file .env-test up -d"
+run = "sudo docker compose -f docker/docker-compose-test.yml --env-file cmd/server/.env-test up -d"
 
 [tasks.run-prod]
 description = "Run Docker image"
-run = "sudo docker compose -f docker/docker-compose-prod.yml --env-file .env-prod up -d"
+run = "sudo docker compose -f docker/docker-compose-prod.yml --env-file cmd/server/.env-prod up -d"
 
 [tasks.stop-dev]
 description = "Stop Docker image"
-run = "sudo docker compose -f docker/docker-compose-dev.yml --env-file .env-dev down"
+run = "sudo docker compose -f docker/docker-compose-dev.yml --env-file cmd/server/.env-dev down"
 
 [tasks.stop-test]
 description = "Stop Docker image"
-run = "sudo docker compose -f docker/docker-compose-test.yml --env-file .env-test down"
+run = "sudo docker compose -f docker/docker-compose-test.yml --env-file cmd/server/.env-test down"
 
 [tasks.stop-prod]
 description = "Stop Docker image"
-run = "sudo docker compose -f docker/docker-compose-prod.yml --env-file .env-prod down"
+run = "sudo docker compose -f docker/docker-compose-prod.yml --env-file cmd/server/.env-prod down"
 
 [tasks.restart-test]
 description = "Restart Docker image"

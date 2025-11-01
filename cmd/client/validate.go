@@ -41,7 +41,7 @@ func ValidadeUser(email, hwid string) User {
 	user := User{Email: email, Hwid: hwid, Active: false, Error: ""}
 
 	// Make GET request to subscription API
-	url := fmt.Sprintf("https://gamedevforge.ovh/validate-user?email=%s&hwid=%s", email, hwid)
+	url := fmt.Sprintf("%s?email=%s&hwid=%s", validateUserURL, email, hwid)
 	response, err := client.Get(url)
 	if err != nil {
 		user.Error = fmt.Sprintf("falha ao checar usuario: %v", err)
