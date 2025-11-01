@@ -17,9 +17,6 @@ WORKDIR /app
 # Copy only the binary
 COPY --from=builder /app/pw-equip .
 
-# Copy download directory for file serving
-COPY ../download ./download
-
 # Install runtime dependencies
 RUN apk update && apk add --no-cache mysql-client curl
 
