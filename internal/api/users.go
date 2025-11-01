@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
-	"pw-equip-change/database"
+	"pw-equip-change/internal/database"
 )
 
 var paymentValueTreshold = 2000

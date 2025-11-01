@@ -8,7 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"pw-equip-change/database"
+	"pw-equip-change/internal/database"
 
 	"github.com/stripe/stripe-go/v82"
 	"github.com/stripe/stripe-go/v82/webhook"

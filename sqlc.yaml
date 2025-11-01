@@ -10,4 +10,4 @@ sql:
     schema: "sql/schema/"
     gen:
       go:
-        out: "database"
+        out: "internal/database"

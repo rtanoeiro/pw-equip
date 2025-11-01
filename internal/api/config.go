@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"pw-equip-change/database"
+	"pw-equip-change/internal/database"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -37,15 +37,15 @@ type ConfigLoader interface {
 	LoadEquipConfig() *Config
 }
 
-func (config *EquipConfig) LoadEquipConfig() *EquipConfig {
-	config = &EquipConfig{
+func (config *EquipConfig) LoadEquipConfig() {
+	*config = EquipConfig{
 		Config: Config{
 			Environment:   GetEnvVar("ENV", "dev"),
-			MySQLUser:     GetEnvVar("MYSQL_USER", "pw-server-tools"),
+			MySQLUser:     GetEnvVar("MYSQL_USER", "pw-equip"),
 			MySQLPassword: GetEnvVar("MYSQL_PASSWORD", "password"),
-			MySQLDatabase: GetEnvVar("MYSQL_DATABASE", "pw-server-tools"),
+			MySQLDatabase: GetEnvVar("MYSQL_DATABASE", "equip"),
 			MySQLHost:     GetEnvVar("MYSQL_HOST", "localhost"),
-			MySQLPort:     GetEnvVar("MYSQL_PORT", "3306"),
+			MySQLPort:     GetEnvVar("MYSQL_PORT", "3307"),
 			ApiPort:       GetEnvVar("API_PORT", "8989"),
 		},
 	}
@@ -70,7 +70,6 @@ func (config *EquipConfig) LoadEquipConfig() *EquipConfig {
 	db.SetMaxOpenConns(DefaultMaxConns)
 	db.SetMaxIdleConns(DefaultMaxConns)
 	config.DB = database.New(db)
-	return config
 }
 
 // For mocking config, we don't load the database
