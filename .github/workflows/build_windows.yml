@@ -29,7 +29,7 @@ jobs:
         run: echo "VERSION=$(Get-Content version.txt)" >> $env:GITHUB_ENV
 
       - name: Build Windows
-        run: fyne package -os windows --name pw-equip-changer.exe -icon media/icon.jpg -release --app-id ${{ env.VERSION }}
+        run: cd cmd/client && fyne package -os windows --name pw-equip-changer.exe -icon media/icon.jpg -release --app-id ${{ env.VERSION }}
 
       - name: Upload Binary Artifact
         uses: actions/upload-artifact@v4
