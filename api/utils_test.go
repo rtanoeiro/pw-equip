@@ -1,4 +1,4 @@
-package equip
+package api
 
 import (
 	"net/http"
@@ -77,7 +77,7 @@ func TestGetEnvVar(t *testing.T) {
 }
 
 func TestLoadAPIConfig(t *testing.T) {
-	config := Config{}
+	config := EquipConfig{}
 	testConfig := config.LoadEquipConfig()
 	if testConfig.ApiPort != "8989" {
 		t.Errorf("Expected port %s, got %s", "8989", testConfig.ApiPort)

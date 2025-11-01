@@ -1,0 +1,78 @@
+services:
+  mysql-equip-test:
+    image: mysql:latest
+    container_name: mysql-equip-test
+    env_file:
+      - ../.env-test
+    environment:
+      MYSQL_HOST: ${MYSQL_HOST}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_PORT: ${MYSQL_PORT}
+    ports:
+      - "${MYSQL_PORT}:3306"
+    volumes:
+      - $HOME/docker-volumes/mysql-equip-test:/var/lib/mysql
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${MYSQL_USER}", "-p${MYSQL_PASSWORD}" ]
+      timeout: 20s
+      retries: 10
+    networks:
+      - pw-network
+
+  phpmyadmin-equip:
+    image: phpmyadmin:apache
+    container_name: phpmyadmin-equip
+    ports:
+      - "8082:80"
+    environment:
+      PMA_HOST: mysql-equip-test
+      PMA_PORT: 3306
+    depends_on:
+      mysql-equip-test:
+        condition: service_healthy
+    networks:
+      - docker_pw-network
+
+  pw-equip-test:
+    image: rtanoeiro/pw-equip:test
+    container_name: pw-equip-test
+    platform: linux/amd64
+    ports:
+      - "${API_PORT}:${API_PORT}"
+    env_file:
+      - ../.env-test
+    environment:
+      ENV: ${ENV}
+      API_PORT: "${API_PORT}"
+      MYSQL_HOST: mysql-equip-test
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_PORT: "3306"
+      JWT_SECRET: ${JWT_SECRET}
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
+      - ./download:/app/download
+    depends_on:
+      mysql-equip-test:
+        condition: service_healthy
+    networks:
+      - docker_pw-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:${API_PORT}/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  mysql_equip_data:
+
+
+networks:
+  docker_pw-network:
+    external: true

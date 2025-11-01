@@ -25,3 +25,63 @@ depends = ["test", "sec", "fmt", "lint"]
 
 [tasks.build]
 run = "sh build.sh"
+
+[tasks.build-prod]
+description = "Build Docker image"
+run = "sudo docker build -f docker/Dockerfile-prod --platform linux/amd64 . -t rtanoeiro/pw-equip:prod"
+
+[tasks.build-test]
+description = "Build Docker image"
+run = "sudo docker build -f docker/Dockerfile-test --platform linux/amd64 . -t rtanoeiro/pw-equip:test"
+
+[tasks.build-dev]
+description = "Build Docker image"
+run = "sudo docker build -f docker/Dockerfile-dev --platform linux/amd64 . -t rtanoeiro/pw-equip:dev"
+
+[tasks.push-prod]
+description = "Push Docker image"
+run = "sudo docker push rtanoeiro/pw-equip:prod"
+
+[tasks.push-test]
+description = "Push Docker image"
+run = "sudo docker push rtanoeiro/pw-equip:test"
+
+[tasks.push-dev]
+description = "Push Docker image"
+run = "sudo docker push rtanoeiro/pw-equip:dev"
+
+[tasks.run-dev]
+description = "Run Docker image"
+run = "sudo docker compose -f docker/docker-compose-dev.yml --env-file .env-dev up -d"
+
+[tasks.run-test]
+description = "Run Docker image"
+run = "sudo docker compose -f docker/docker-compose-test.yml --env-file .env-test up -d"
+
+[tasks.run-prod]
+description = "Run Docker image"
+run = "sudo docker compose -f docker/docker-compose-prod.yml --env-file .env-prod up -d"
+
+[tasks.stop-dev]
+description = "Stop Docker image"
+run = "sudo docker compose -f docker/docker-compose-dev.yml --env-file .env-dev down"
+
+[tasks.stop-test]
+description = "Stop Docker image"
+run = "sudo docker compose -f docker/docker-compose-test.yml --env-file .env-test down"
+
+[tasks.stop-prod]
+description = "Stop Docker image"
+run = "sudo docker compose -f docker/docker-compose-prod.yml --env-file .env-prod down"
+
+[tasks.restart-test]
+description = "Restart Docker image"
+depends = ["stop-test", "run-test"]
+
+[tasks.restart-prod]
+description = "Restart Docker image"
+depends = ["stop-prod", "run-prod"]
+
+[tasks.restart-dev]
+description = "Restart Docker image"
+depends = ["stop-dev", "run-dev"]

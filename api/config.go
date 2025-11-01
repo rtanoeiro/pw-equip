@@ -1,4 +1,4 @@
-package equip
+package api
 
 import (
 	"database/sql"
@@ -25,6 +25,10 @@ type Config struct {
 	DB            *database.Queries
 }
 
+type EquipConfig struct {
+	Config
+}
+
 type MockConfig struct {
 	Config
 }
@@ -33,15 +37,17 @@ type ConfigLoader interface {
 	LoadEquipConfig() *Config
 }
 
-func (config *Config) LoadEquipConfig() *Config {
-	config = &Config{
-		Environment:   GetEnvVar("ENV", "dev"),
-		MySQLUser:     GetEnvVar("MYSQL_USER", "pw-server-tools"),
-		MySQLPassword: GetEnvVar("MYSQL_PASSWORD", "password"),
-		MySQLDatabase: GetEnvVar("MYSQL_DATABASE", "pw-server-tools"),
-		MySQLHost:     GetEnvVar("MYSQL_HOST", "localhost"),
-		MySQLPort:     GetEnvVar("MYSQL_PORT", "3306"),
-		ApiPort:       GetEnvVar("API_PORT", "8989"),
+func (config *EquipConfig) LoadEquipConfig() *EquipConfig {
+	config = &EquipConfig{
+		Config: Config{
+			Environment:   GetEnvVar("ENV", "dev"),
+			MySQLUser:     GetEnvVar("MYSQL_USER", "pw-server-tools"),
+			MySQLPassword: GetEnvVar("MYSQL_PASSWORD", "password"),
+			MySQLDatabase: GetEnvVar("MYSQL_DATABASE", "pw-server-tools"),
+			MySQLHost:     GetEnvVar("MYSQL_HOST", "localhost"),
+			MySQLPort:     GetEnvVar("MYSQL_PORT", "3306"),
+			ApiPort:       GetEnvVar("API_PORT", "8989"),
+		},
 	}
 
 	mySQLEquipDatabase := GetEnvVar("MYSQL_EQUIP_DATABASE", "equip")
