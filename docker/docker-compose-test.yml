@@ -56,7 +56,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./logs:/app/logs
-      - ../download:/app/download
+      - ./download:/app/download
     depends_on:
       mysql-equip-test:
         condition: service_healthy
