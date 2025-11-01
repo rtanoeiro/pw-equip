@@ -1,4 +1,4 @@
-package equip
+package main
 
 import (
 	"encoding/json"

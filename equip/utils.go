@@ -1,10 +1,7 @@
-package equip
+package main
 
 import (
 	"fmt"
-	"io"
-	"log"
-	"net/http"
 	"regexp"
 	"strings"
 	"time"
@@ -60,24 +57,12 @@ func IsValidEmail(email string) bool {
 	return emailRegex.MatchString(email)
 }
 
-func ValidateEmailWithHWID(email string, hwid string) {
-	request, errorRequest := http.NewRequest("GET", fmt.Sprintf("http://gamedevforge.ovh/validate-user?email=%s&hwid=%s", email, hwid), nil)
-	if errorRequest != nil {
-		log.Fatal(errorRequest)
+// DisplayHWID shows the current machine's HWID for debugging/registration purposes
+func DisplayHWID() {
+	hwid, err := GetHWID()
+	if err != nil {
+		fmt.Printf("Erro ao obter HWID: %v\n", err)
+		return
 	}
-	request.Header.Set("Content-Type", "text/plain")
-	response, errorResponse := http.DefaultClient.Do(request)
-	if errorResponse != nil {
-		log.Fatal(errorResponse)
-	}
-	defer response.Body.Close()
-
-	// read body and log it
-	if response.StatusCode != http.StatusOK {
-		body, errorBody := io.ReadAll(response.Body)
-		if errorBody != nil {
-			log.Fatal(errorBody)
-		}
-		log.Fatalf("response.StatusCode: %d, response.Body: %s", response.StatusCode, string(body))
-	}
+	fmt.Printf("HWID da máquina: %s\n", hwid)
 }

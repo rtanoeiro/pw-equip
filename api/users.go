@@ -1,4 +1,4 @@
-package equip
+package api
 
 import (
 	"database/sql"

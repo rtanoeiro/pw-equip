@@ -1,4 +1,4 @@
-package equip
+package api
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 )
 
 func TestLoadEquipConfig(t *testing.T) {
-	config := Config{}
+	config := EquipConfig{}
 	config.LoadEquipConfig()
 	if config.MySQLHost != "localhost" {
 		t.Errorf("Expected MySQLHost to be localhost, got %s", config.MySQLHost)
