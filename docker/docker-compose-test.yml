@@ -57,6 +57,7 @@ services:
     volumes:
       - ./logs:/app/logs
       - ../download:/app/download
+      - ../static:/app/static
     depends_on:
       mysql-equip-test:
         condition: service_healthy
