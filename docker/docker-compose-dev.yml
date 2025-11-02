@@ -34,7 +34,40 @@ services:
       mysql-equip-dev:
         condition: service_healthy
     networks:
+
+
+  pw-equip-dev:
+    image: rtanoeiro/pw-equip:dev
+    container_name: pw-equip-dev
+    platform: linux/amd64
+    ports:
+      - "${API_PORT}:${API_PORT}"
+    env_file:
+      - ../cmd/server/.env-dev
+    environment:
+      ENV: ${ENV}
+      API_PORT: "${API_PORT}"
+      MYSQL_HOST: mysql-equip-dev
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_PORT: "3306"
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
+      - ../download:/app/download
+      - ../static:/app/static
+    depends_on:
+      mysql-equip-dev:
+        condition: service_healthy
+    networks:
       - docker_pw-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:${API_PORT}/equip/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
 volumes:
   mysql_equip_data:
