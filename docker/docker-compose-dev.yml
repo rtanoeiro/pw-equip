@@ -34,7 +34,7 @@ services:
       mysql-equip-dev:
         condition: service_healthy
     networks:
-
+      - docker_pw-network
 
   pw-equip-dev:
     image: rtanoeiro/pw-equip:dev
