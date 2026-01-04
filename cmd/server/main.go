@@ -30,9 +30,6 @@ func main() {
 	r.Use(middleware.Logger)
 
 	r.Handle("/equip/download/*", http.StripPrefix("/equip/download/", http.FileServer(http.Dir("./download"))))
-	r.Get("/equip/equipment-changer", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "./static/equipment-changer.html")
-	})
 
 	// Pw Equip Changer Endpoints
 	r.Post("/equip/register-user", equipCfg.HandleRegisterUser)
