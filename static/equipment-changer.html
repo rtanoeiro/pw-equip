@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Troca de Equipamentos PW - Perfect World</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <script src="https://unpkg.com/htmx.org@2.0.4/dist/ext/response-targets.js"></script>
+</head>
+
+<body hx-boost="true" hx-ext="response-targets">
+    <div class="container">
+        <div class="nav">
+            <a href="/" class="nav-back">← Voltar para Início</a>
+            <div class="nav-title">Troca de Equipamentos PW</div>
+            <div class="language-selector">
+                <div class="language-toggle">
+                    <div class="language-flag"
+                        style="background-image: url('/static/icons/brazil-flag-round-circle-icon.webp');"></div>
+                    <span>PT</span>
+                </div>
+                <div class="language-dropdown">
+                    <a href="/equipment-changer-en" class="language-option active">
+                        <div class="language-flag"
+                            style="background-image: url('/static/icons/uk-flag-round-circle-icon.webp');"></div>
+                        <span>English</span>
+                    </a>
+                    <a href="/equipment-changer" class="language-option">
+                        <div class="language-flag"
+                            style="background-image: url('/static/icons/brazil-flag-round-circle-icon.webp');"></div>
+                        <span>Portuguese</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="video spacing">
+            <h2 class="section-title">Veja em Ação!</h2>
+            <div class="video-placeholder">
+                <div class="video-screen">
+                    <iframe width="1000" height="700" src="https://www.youtube.com/embed/erQ5b6505wY">
+                    </iframe>
+                </div>
+            </div>
+            <p class="text-muted">Como alternar entre sets de equipamentos com um clique!</p>
+        </div>
+
+        <div class="grid grid-2 spacing">
+            <div class="item">
+                <div class="icon">🎯</div>
+                <h3>Multi-Barra</h3>
+                <p>3 barras: habilidades, defesa e ataque</p>
+            </div>
+            <div class="item">
+                <div class="icon">⚡</div>
+                <h3>Troca Rápida</h3>
+                <p>Alterne com tecla Q instantaneamente</p>
+            </div>
+            <div class="item">
+                <div class="icon">⚙️</div>
+                <h3>Tempo Ajustável</h3>
+                <p>Otimize cliques para máxima velocidade</p>
+            </div>
+        </div>
+
+        <div class="card spacing">
+            <h2 class="section-title">Como Funciona</h2>
+            <div class="step-list">
+                <div class="step-item">
+                    <div class="step-content">
+                        <h4>1. Configure Barras</h4>
+                        <p>3 barras: habilidades (principal), defesa e ataque</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-content">
+                        <h4>2. Pressione Q</h4>
+                        <p>Alterne instantaneamente entre conjuntos</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-content">
+                        <h4>3. Retorna Auto</h4>
+                        <p>Volta para habilidades após equipar</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-content">
+                        <h4>4. Otimize</h4>
+                        <p>Até 11 itens, ajuste tempo ideal</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-2 spacing">
+            <div class="item">
+                <div class="icon">💎</div>
+                <h3>Compra Única</h3>
+                <p>Uma vez para sempre. Sem mensalidades</p>
+            </div>
+            <div class="item">
+                <div class="icon">🛡️</div>
+                <h3>Seguro</h3>
+                <p>Foco em segurança e proteção</p>
+            </div>
+            <div class="item">
+                <div class="icon">🎮</div>
+                <h3>Para PW</h3>
+                <p>Específico para Perfect World</p>
+            </div>
+        </div>
+
+        <div class="card spacing text-center">
+            <h2 class="section-title">Melhore sua Jogabilidade</h2>
+            <p class="text-large mb-30">Sistema profissional de troca de equipamentos</p>
+            <div class="grid grid-2 mb-30">
+                <div class="feature-badge">✓ Compra única</div>
+                <div class="feature-badge">✓ Atualizações</div>
+                <div class="feature-badge">✓ Download</div>
+                <div class="feature-badge">✓ Suporte</div>
+            </div>
+            <script async src="https://js.stripe.com/v3/buy-button.js">
+            </script>
+
+            <stripe-buy-button buy-button-id="buy_btn_1SHQTzQVkneHVuG1tSsktOil"
+                publishable-key="pk_live_51SCGKAQVkneHVuG1Htm6RXm5ubpWfl53ujrZQAVDTjoMb0BIehsduOh4t6GRnH0FdOCHTTfcEXAqqcSPZ9ZpuQsw00tD6tnpGu">
+            </stripe-buy-button>
+        </div>
+        <div class="card spacing text-center">
+            <a href="mailto:pwdevtools@gmail.com" class="btn large">Email</a>
+        </div>
+
+
+        <div class="footer">
+            <p>&copy; 2025 DevPW. Todos os direitos reservados.</p>
+            <div class="footer-links">
+                <a href="/">Início</a>
+                <a href="mailto:pwdevtools@gmail.com">Suporte</a>
+                <a href="mailto:pwdevtools@gmail.com">Contato</a>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

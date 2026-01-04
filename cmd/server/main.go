@@ -33,12 +33,8 @@ func main() {
 	r.Get("/equip/equipment-changer", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "./static/equipment-changer.html")
 	})
-	r.Get("/equip/equipment-changer-en", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "./static/equipment-changer-en.html")
-	})
 
 	// Pw Equip Changer Endpoints
-	r.Post("/equip/payment-events", equipCfg.HandlePaymentEvents)
 	r.Post("/equip/register-user", equipCfg.HandleRegisterUser)
 	r.Get("/equip/validate-user", equipCfg.HandleValidateUser)
 	r.Patch("/equip/reset-hwid", equipCfg.HandleResetHWID)
