@@ -11,6 +11,8 @@ type Config struct {
 	Email string `json:"email"`
 	BarChangeKey string `json:"barchangekey"`
 	TimingChange string `json:"timingchange"`
+	ChangeSetKeyCode uint16 `json:"changesetkey"`
+	ChangeSetKeyChar string `json:"changesetkeychar"`
 	Keys []string `json:"keys"`
 }
 
@@ -31,12 +33,14 @@ func getConfigPath() (string, error) {
 	return filepath.Join(configDir, "config.json"), nil
 }
 
-func SaveConfig(email, keyChange, timingChange string, keys []string) error {
+func SaveConfig(email, keyChange, timingChange,changeSetKeyChar string, keys []string, changeSetKeyCode uint16) error {
 	config := Config{
 		Email: email,
 		BarChangeKey: keyChange,
 		TimingChange: timingChange,
 		Keys: keys,
+		ChangeSetKeyCode: changeSetKeyCode,
+		ChangeSetKeyChar: changeSetKeyChar,
 		
 	}
 
