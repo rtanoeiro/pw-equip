@@ -35,7 +35,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: pw-equip-changer-v${{ env.VERSION }}.exe
-          path: pw-equip-changer-v${{ env.VERSION }}.exe
+          path: cmd/client/pw-equip-changer-v${{ env.VERSION }}.exe
           overwrite: true
 
   release:
