@@ -2,12 +2,16 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"os"
 	"path/filepath"
 )
 
 type Config struct {
 	Email string `json:"email"`
+	BarChangeKey string `json:"barchangekey"`
+	TimingChange string `json:"timingchange"`
+	Keys []string `json:"keys"`
 }
 
 // getConfigPath returns the path to the config file
@@ -27,46 +31,51 @@ func getConfigPath() (string, error) {
 	return filepath.Join(configDir, "config.json"), nil
 }
 
-// SaveEmail saves the email to the config file
-func SaveEmail(email string) error {
+func SaveConfig(email, keyChange, timingChange string, keys []string) error {
+	config := Config{
+		Email: email,
+		BarChangeKey: keyChange,
+		TimingChange: timingChange,
+		Keys: keys,
+		
+	}
+
 	configPath, err := getConfigPath()
 	if err != nil {
 		return err
 	}
 
-	config := Config{
-		Email: email,
-	}
 
 	data, err := json.MarshalIndent(config, "", "  ")
 	if err != nil {
 		return err
 	}
+	log.Printf("Successfullt saved config into file")
 
 	return os.WriteFile(configPath, data, 0644)
 }
 
 // LoadEmail loads the email from the config file
-func LoadEmail() (string, error) {
+func LoadConfig() (Config, error) {
 	configPath, err := getConfigPath()
 	if err != nil {
-		return "", err
+		return Config{}, err
 	}
 
 	// If config file doesn't exist, return empty string
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		return "", nil
+		return Config{}, nil
 	}
 
 	data, err := os.ReadFile(configPath)
 	if err != nil {
-		return "", err
+		return Config{}, err
 	}
 
 	var config Config
 	if err := json.Unmarshal(data, &config); err != nil {
-		return "", err
+		return Config{}, err
 	}
 
-	return config.Email, nil
+	return config, nil
 }
