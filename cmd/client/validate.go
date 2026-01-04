@@ -59,7 +59,7 @@ func ValidadeUser(email, hwid string) User {
 		return user
 	case http.StatusPreconditionFailed:
 		user.Active = false
-		user.Error = "Assinatura não ativa.\nPor favor, ative sua assinatura, para comprar acesse https://gamedevforge.ovh"
+		user.Error = "Assinatura não ativa.\nPor favor, ative sua assinatura, para comprar acesse https://painelguildpw.com.br"
 		return user
 	case http.StatusInternalServerError:
 		user.Active = false

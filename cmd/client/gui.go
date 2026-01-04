@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 
@@ -57,12 +58,20 @@ func (g *GuiApp) RunGUI() {
 - Para trocar de set aperte a tecla Q!
 	`)
 
+	config, errConfig := LoadConfig()
+	if errConfig != nil {
+		log.Printf("failed to load config file")
+		return
+	}
+	log.Printf("Successfully loaded configuration! Config: %v", config)
+
 	emailEntry := widget.NewEntry()
-	emailEntry.SetPlaceHolder("Digite seu email usado na compra do programa")
 
 	// Load saved email
-	if savedEmail, err := LoadEmail(); err == nil && savedEmail != "" {
-		emailEntry.SetText(savedEmail)
+	if config.Email != "" {
+		emailEntry.SetText(config.Email)
+	} else {
+		emailEntry.SetPlaceHolder("Digite seu email usado na compra do programa")
 	}
 
 	// Email status label
@@ -109,11 +118,6 @@ func (g *GuiApp) RunGUI() {
 
 		emailStatusLabel.SetText("✅ Email válido - Pressione Enter para registrar")
 		isEmailValid = true
-
-		if err := SaveEmail(email); err != nil {
-			// Handle error silently or log it
-			fmt.Printf("Error saving email: %v\n", err)
-		}
 
 		updateButtonState()
 	}
@@ -165,17 +169,30 @@ func (g *GuiApp) RunGUI() {
 		}()
 	}
 
-	// Form fields
-	numItemsEntry := widget.NewEntry()
-	numItemsEntry.SetPlaceHolder("Digite um número de 1 a 11")
+	// Base config for app usage
+	numItemsEntry := widget.NewEntry()	
+	// In case we have configured keys, auto load them
+	if config.Keys != nil {
+		numItemsEntry.SetText(fmt.Sprintf("%d", len(config.Keys)))
+	} else {
+		numItemsEntry.SetPlaceHolder("Digite um número de 1 a 11")
+	}
 
 	keyShiftEntry := widget.NewEntry()
-	keyShiftEntry.SetPlaceHolder("Digite 'v' ou '`'")
-
+	if config.BarChangeKey != "" {
+		keyShiftEntry.SetText(config.BarChangeKey)
+	} else {
+		keyShiftEntry.SetPlaceHolder("Digite 'v' ou '`'")
+	}
+	
 	timeClicksEntry := widget.NewEntry()
-	timeClicksEntry.SetPlaceHolder("Tempo em milisegundos. Exemplo: 1000 = 1 segundo. 200 = 0.2 segundos, quando menor, mais rapido.")
-
-	// Dynamic item keys container
+	if config.TimingChange != "" {
+		timeClicksEntry.SetText(config.TimingChange)
+	} else {
+		timeClicksEntry.SetPlaceHolder("Tempo em milisegundos. Exemplo: 1000 = 1 segundo. 200 = 0.2 segundos, quando menor, mais rapido.")
+	}
+	
+	// Dynamic item keys conta	iner
 	itemKeysContainer := container.NewVBox()
 	var itemKeyEntries []*widget.Entry
 
@@ -183,12 +200,19 @@ func (g *GuiApp) RunGUI() {
 	updateItemKeys := func(numItems int) {
 		itemKeysContainer.RemoveAll()
 		itemKeyEntries = make([]*widget.Entry, numItems)
-
+		
+		
 		for i := 0; i < numItems; i++ {
 			entry := widget.NewEntry()
-			entry.SetPlaceHolder(fmt.Sprintf("Tecla do item %d", i+1))
-			itemKeyEntries[i] = entry
+			
 			label := widget.NewLabel(fmt.Sprintf("Item %d:", i+1))
+			// In case we have saved keys, auto populate them
+			if i < len(config.Keys) && config.Keys[i] != "" {
+				entry.SetText(config.Keys[i])
+			} else {
+				entry.SetPlaceHolder(fmt.Sprintf("Tecla do item %d", i+1))
+			}
+			itemKeyEntries[i] = entry
 			itemKeysContainer.Add(container.NewHBox(label, entry))
 		}
 		itemKeysContainer.Refresh()
@@ -199,6 +223,11 @@ func (g *GuiApp) RunGUI() {
 		if num, err := strconv.Atoi(text); err == nil && num >= 1 && num <= 11 {
 			updateItemKeys(num)
 		}
+	}
+
+	// Initialize item keys on app startup if config exists
+	if len(config.Keys) > 0 {
+		updateItemKeys(len(config.Keys))
 	}
 
 	// Status label
@@ -233,12 +262,14 @@ func (g *GuiApp) RunGUI() {
 		// Validate email first
 		email := emailEntry.Text
 		if !IsValidEmail(email) {
+			log.Printf("Invalid email. Email used: %s", email)
 			statusLabel.SetText("Erro: Digite um email válido")
 			return
 		}
 
 		// Check if email and subscription are valid (already verified)
 		if !isEmailValid || !isSubscriptionValid {
+			log.Printf("Email is either invalid or usubscribed. Invalid: %v. Unsubscribed %v", isEmailValid, isSubscriptionValid)
 			statusLabel.SetText("Erro: Email deve estar registrado e assinatura ativa")
 			return
 		}
@@ -246,18 +277,21 @@ func (g *GuiApp) RunGUI() {
 		// Validate inputs
 		numItems, err := strconv.Atoi(numItemsEntry.Text)
 		if err != nil || numItems < 1 || numItems > 11 {
+			log.Printf("User entered wrong number of items")
 			statusLabel.SetText("Erro: Número de items deve ser entre 1 e 11")
 			return
 		}
 
 		keyShift := keyShiftEntry.Text
 		if keyShift != "v" && keyShift != "`" && keyShift != "'" {
+			log.Printf("User select wrong key to change bar")
 			statusLabel.SetText("Erro: Tecla deve ser *v* ou *`* ou *'*")
 			return
 		}
 
 		timeClicks, err := strconv.Atoi(timeClicksEntry.Text)
 		if err != nil || timeClicks < 0 {
+			log.Printf("User selected wrong timing in between changes")
 			statusLabel.SetText("Erro: Tempo deve ser um número válido")
 			return
 		}
@@ -268,9 +302,11 @@ func (g *GuiApp) RunGUI() {
 			if i < len(itemKeyEntries) && itemKeyEntries[i].Text != "" {
 				itemKeys[i] = itemKeyEntries[i].Text
 			} else {
+				log.Printf("User attempted to started before filling all keys. Missing key %d", i+1)
 				statusLabel.SetText(fmt.Sprintf("Erro: Digite a tecla para o item %d", i+1))
 				return
 			}
+
 		}
 
 		// Check subscription before starting monitoring
@@ -301,6 +337,12 @@ func (g *GuiApp) RunGUI() {
 
 		// Start monitoring in a goroutine
 		stopMonitoring = make(chan bool)
+		log.Printf("Saving configuration into file")
+		errConfig := SaveConfig(email, keyShift, timeClicksEntry.Text, itemKeys)
+		if errConfig != nil {
+			log.Printf("Failed to save config. Error %s", errConfig)
+			return
+		}
 		go g.startMonitoring(statusLabel, stopMonitoring)
 	})
 
@@ -308,12 +350,12 @@ func (g *GuiApp) RunGUI() {
 	startButton.Disable()
 
 	// Check if saved email is valid and has active subscription
-	if savedEmail, err := LoadEmail(); err == nil && savedEmail != "" && IsValidEmail(savedEmail) {
+	if config.Email != "" && IsValidEmail(config.Email) {
 		go func() {
 			fyne.Do(func() {
-				user := RegisterEmailWithHWID(savedEmail, hwid)
+				user := RegisterEmailWithHWID(config.Email, hwid)
 				if user.Active {
-					userSub := ValidadeUser(savedEmail, hwid)
+					userSub := ValidadeUser(config.Email, hwid)
 					if err == nil && userSub.Active {
 						emailStatusLabel.SetText("✅ Email registrado e assinatura ativa")
 						isEmailValid = true
