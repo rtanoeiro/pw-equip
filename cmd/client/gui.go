@@ -55,7 +55,7 @@ func (g *GuiApp) RunGUI() {
 - Em sua barra principal, deixe suas skills/boticarios como deseja usa-los
 - Se deseja iniciar com equipamentos de ataque, na segunda barra deixe os Equipamentos de ataque
 - Na ultima barra, deixe os Equipamentos de defesa
-- Para trocar de set aperte a tecla Q!
+- Para trocar de set clique no botão "Clique para definir tecla" e pressione a tecla desejada!
 	`)
 
 	config, errConfig := LoadConfig()
@@ -184,7 +184,50 @@ func (g *GuiApp) RunGUI() {
 	} else {
 		keyShiftEntry.SetPlaceHolder("Digite 'v' ou '`'")
 	}
+
+	// Button to capture key press for changing sets
+	// We use a button instead of an entry to avoid conflicts with text input
+	var changeSetKeyButton *widget.Button
+	changeSetKeyButton = widget.NewButton("Clique para definir tecla", func() {
+		// Show user that we're waiting for key press
+		changeSetKeyButton.SetText("Pressione uma tecla...")
+		changeSetKeyButton.Disable() // Prevent multiple clicks
+		
+		// Run hook listener in a goroutine to avoid blocking the UI
+		go func() {
+			// Start listening for keyboard events
+			evChan := hook.Start()
+			
+			// Wait for the FIRST key press event
+			for ev := range evChan {
+				// Only capture KeyDown events (ignore KeyUp)
+				if ev.Kind == hook.KeyDown {
+					// Store both keycode and character representation
+					config.ChangeSetKeyCode = ev.Keycode
+					config.ChangeSetKeyChar = string(ev.Keychar)
+					
+					// Stop the hook listener immediately after capturing one key
+					hook.End()
+					
+					// Update UI - must use fyne.Do() to update from goroutine
+					fyne.Do(func() {
+						// Show the captured key on the button
+						changeSetKeyButton.SetText(fmt.Sprintf("Tecla: %s (código: %d)", string(ev.Keychar), ev.Keycode))
+						changeSetKeyButton.Enable() // Re-enable the button
+					})
+					
+					// Exit the goroutine
+					return
+				}
+			}
+		}()
+	})
 	
+	// If we have a saved key, show it on the button
+	if config.ChangeSetKeyChar != "" {
+		changeSetKeyButton.SetText(fmt.Sprintf("Tecla: %s (código: %d)", config.ChangeSetKeyChar, config.ChangeSetKeyCode))
+	}
+
 	timeClicksEntry := widget.NewEntry()
 	if config.TimingChange != "" {
 		timeClicksEntry.SetText(config.TimingChange)
@@ -274,6 +317,15 @@ func (g *GuiApp) RunGUI() {
 			return
 		}
 
+		// Get the captured keycode from config
+		// We already stored this when the user clicked the capture button
+		changeSetKeyCode := config.ChangeSetKeyCode
+		if changeSetKeyCode == 0 {
+			log.Printf("User did not configure change set key")
+			statusLabel.SetText("Erro: Defina a tecla para trocar de set")
+			return
+		}
+
 		// Validate inputs
 		numItems, err := strconv.Atoi(numItemsEntry.Text)
 		if err != nil || numItems < 1 || numItems > 11 {
@@ -332,18 +384,18 @@ func (g *GuiApp) RunGUI() {
 		}
 
 		startButton.Enable()
-		statusLabel.SetText("Assinatura ativa! Monitoramento iniciado. Pressione Q para trocar de set.")
+		statusLabel.SetText(fmt.Sprintf("Assinatura ativa! Monitoramento iniciado. Pressione %s para trocar de set.", config.ChangeSetKeyChar))
 		startButton.SetText("Parar Monitoramento")
 
 		// Start monitoring in a goroutine
 		stopMonitoring = make(chan bool)
 		log.Printf("Saving configuration into file")
-		errConfig := SaveConfig(email, keyShift, timeClicksEntry.Text, itemKeys)
+		errConfig := SaveConfig(email, keyShift, timeClicksEntry.Text, config.ChangeSetKeyChar, itemKeys, changeSetKeyCode)
 		if errConfig != nil {
 			log.Printf("Failed to save config. Error %s", errConfig)
 			return
 		}
-		go g.startMonitoring(statusLabel, stopMonitoring)
+		go g.startMonitoring(statusLabel, stopMonitoring, changeSetKeyCode)
 	})
 
 	// Initialize button as disabled
@@ -385,6 +437,7 @@ func (g *GuiApp) RunGUI() {
 			widget.NewFormItem("Email usado na compra do programa:", container.NewVBox(emailEntry, emailStatusLabel)),
 			widget.NewFormItem("Quantos items deseja trocar?", numItemsEntry),
 			widget.NewFormItem("Tecla para mudar barras de skills:", keyShiftEntry),
+			widget.NewFormItem("Tecla para trocar de set:", changeSetKeyButton),
 			widget.NewFormItem("Tempo entre clicks (em milisegundos):", timeClicksEntry),
 		),
 		widget.NewLabel("Teclas dos Items:"),
@@ -401,7 +454,7 @@ func (g *GuiApp) RunGUI() {
 	g.window.ShowAndRun()
 }
 
-func (g *GuiApp) startMonitoring(statusLabel *widget.Label, stopChan chan bool) {
+func (g *GuiApp) startMonitoring(statusLabel *widget.Label, stopChan chan bool, keyCode uint16) {
 	evChan := hook.Start()
 	defer hook.End()
 
@@ -410,10 +463,11 @@ func (g *GuiApp) startMonitoring(statusLabel *widget.Label, stopChan chan bool) 
 		case <-stopChan:
 			return
 		case ev := <-evChan:
-			if ev.Kind == hook.KeyDown && ev.Keycode == 16 { // Q key
+			// Check if the pressed key matches the configured key
+			if ev.Kind == hook.KeyDown && ev.Keycode == keyCode {
 				statusLabel.SetText("Trocando set...")
 				ChangeItems(g.setup)
-				statusLabel.SetText("Set trocado! Pressione Q novamente para trocar.")
+				statusLabel.SetText("Set trocado! Pressione a tecla novamente para trocar.")
 			}
 		}
 	}
