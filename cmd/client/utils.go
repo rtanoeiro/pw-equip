@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/go-vgo/robotgo"
 )
 
 type User struct {
@@ -15,8 +17,7 @@ type User struct {
 }
 
 func ClickButton(button string) {
-	log.Printf("Clicking button: %s", button)
-	//robotgo.KeyPress(button)
+	robotgo.KeyPress(button)
 	time.Sleep(10 * time.Millisecond)
 	// Note: Errors are silently ignored to prevent console output in GUI mode
 }
