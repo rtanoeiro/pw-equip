@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
+	"strings"
+	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -39,7 +40,28 @@ func NewGuiApp() *GuiApp {
 }
 
 func (g *GuiApp) RunGUI() {
-	// Title
+
+	configPath, errPath := GetConfigPath()
+	if errPath != nil {
+		log.Fatalf("Failed to get config path: %v", errPath)
+	}
+
+	// Create a log file for the application
+	logFile, err := os.OpenFile(
+		fmt.Sprintf("%s", strings.Replace(configPath, "config.json", "app.log", 1)),
+		os.O_CREATE|os.O_WRONLY|os.O_APPEND,
+		0666,
+	)
+	if err != nil {
+		log.Fatalf("Failed to open log file: %v", err)
+	}
+	defer logFile.Close()
+
+	log.SetOutput(logFile)
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
+	log.Printf("\n\n\n\nApplication started at %s", time.Now().Format(time.RFC3339))
+
 	title := widget.NewLabel("Bem vindo ao seu auxilio de troca de set")
 	title.TextStyle.Bold = true
 
@@ -48,7 +70,6 @@ func (g *GuiApp) RunGUI() {
 		hwid = "Erro ao obter HWID"
 	}
 
-	// Instructions
 	instructions := widget.NewRichTextFromMarkdown(`
 **Instruções:**
 - Deixe 3 barras livres para serem rotacionadas
@@ -67,206 +88,72 @@ func (g *GuiApp) RunGUI() {
 
 	emailEntry := widget.NewEntry()
 
-	// Load saved email
+	// Load saved email on config file
 	if config.Email != "" {
 		emailEntry.SetText(config.Email)
 	} else {
 		emailEntry.SetPlaceHolder("Digite seu email usado na compra do programa")
 	}
 
-	// Email status label
+	// Email status label defaulted to empty, it's soon replaced with the email status
 	emailStatusLabel := widget.NewLabel("")
 
-	// Button state management
+	// Creation of the base buttons and states for button state management
 	var startButton *widget.Button
 	var resetHWIDButton *widget.Button
 	var isEmailValid bool = false
 	var isSubscriptionValid bool = false
+	var isMonitoring bool = false
 
-	// Function to update button state
-	updateButtonState := func() {
-		if startButton != nil {
-			if isEmailValid && isSubscriptionValid {
-				startButton.Enable()
-			} else {
-				startButton.Disable()
-			}
-		}
-		if resetHWIDButton != nil {
-			if isEmailValid {
-				resetHWIDButton.Enable()
-			} else {
-				resetHWIDButton.Disable()
-			}
-		}
-	}
+	// Functions to update button states. We use pointers to button pointers so we can access buttons created after this function is called
+	updateButtonState := UpdateButtonState(&startButton, &resetHWIDButton, &isEmailValid, &isSubscriptionValid)
 
-	emailEntry.OnChanged = func(email string) {
-		isEmailValid = false
-		isSubscriptionValid = false
-		updateButtonState()
+	emailEntry.OnChanged = OnEmailChanged(emailStatusLabel, &isEmailValid, &isSubscriptionValid, updateButtonState)
 
-		if email == "" {
-			emailStatusLabel.SetText("")
-			return
-		}
-
-		if !IsValidEmail(email) {
-			emailStatusLabel.SetText("❌ Email inválido")
-			return
-		}
-
-		emailStatusLabel.SetText("✅ Email válido - Pressione Enter para registrar")
-		isEmailValid = true
-
-		updateButtonState()
-	}
-
-	emailEntry.OnSubmitted = func(email string) {
-		if !IsValidEmail(email) {
-			emailStatusLabel.SetText("❌ Email inválido")
-			isEmailValid = false
-			isSubscriptionValid = false
-			updateButtonState()
-			return
-		}
-
-		emailStatusLabel.SetText("🔄 Registrando email...")
-		isSubscriptionValid = false
-		updateButtonState()
-
-		// Run registration and subscription check in goroutine
-		go func() {
-			fyne.Do(func() {
-				userReg := RegisterEmailWithHWID(email, hwid)
-
-				// Update UI in main thread
-				emailStatusLabel.SetText("🔄 Verificando assinatura...")
-
-				if userReg.Active {
-					// Check subscription
-					userSub := ValidadeUser(email, hwid)
-					if userSub.Error != "" {
-						emailStatusLabel.SetText("⚠️ Erro ao verificar assinatura: \n" + userSub.Error)
-						isSubscriptionValid = false
-					} else if userSub.Active {
-						emailStatusLabel.SetText("✅ Email registrado e assinatura ativa")
-						isEmailValid = true
-						isSubscriptionValid = true
-					} else {
-						emailStatusLabel.SetText("⚠️ Assinatura inválida: \n" + userSub.Error)
-						isEmailValid = true
-						isSubscriptionValid = false
-					}
-				} else {
-					emailStatusLabel.SetText("⚠️ " + userReg.Email + ": " + userReg.Error)
-					isEmailValid = false
-					isSubscriptionValid = false
-				}
-
-				updateButtonState()
-			})
-		}()
-	}
+	emailEntry.OnSubmitted = OnEmailSubmitted(hwid, emailStatusLabel, &isEmailValid, &isSubscriptionValid, updateButtonState)
 
 	// Base config for app usage
-	numItemsEntry := widget.NewEntry()	
-	// In case we have configured keys, auto load them
+	numItemsEntry := widget.NewEntry()
+	// In case we have configured keys on config file, auto load them
 	if config.Keys != nil {
 		numItemsEntry.SetText(fmt.Sprintf("%d", len(config.Keys)))
 	} else {
 		numItemsEntry.SetPlaceHolder("Digite um número de 1 a 11")
 	}
 
-	keyShiftEntry := widget.NewEntry()
+	keyBarShiftEntry := widget.NewEntry()
 	if config.BarChangeKey != "" {
-		keyShiftEntry.SetText(config.BarChangeKey)
+		keyBarShiftEntry.SetText(config.BarChangeKey)
 	} else {
-		keyShiftEntry.SetPlaceHolder("Digite 'v' ou '`'")
+		keyBarShiftEntry.SetPlaceHolder("Digite 'v' ou '`'")
 	}
 
 	// Button to capture key press for changing sets
 	// We use a button instead of an entry to avoid conflicts with text input
 	var changeSetKeyButton *widget.Button
-	changeSetKeyButton = widget.NewButton("Clique para definir tecla", func() {
-		// Show user that we're waiting for key press
-		changeSetKeyButton.SetText("Pressione uma tecla...")
-		changeSetKeyButton.Disable() // Prevent multiple clicks
-		
-		// Run hook listener in a goroutine to avoid blocking the UI
-		go func() {
-			// Start listening for keyboard events
-			evChan := hook.Start()
-			
-			// Wait for the FIRST key press event
-			for ev := range evChan {
-				// Only capture KeyDown events (ignore KeyUp)
-				if ev.Kind == hook.KeyDown {
-					// Store both keycode and character representation
-					config.ChangeSetKeyCode = ev.Keycode
-					config.ChangeSetKeyChar = string(ev.Keychar)
-					
-					// Stop the hook listener immediately after capturing one key
-					hook.End()
-					
-					// Update UI - must use fyne.Do() to update from goroutine
-					fyne.Do(func() {
-						// Show the captured key on the button
-						changeSetKeyButton.SetText(fmt.Sprintf("Tecla: %s (código: %d)", string(ev.Keychar), ev.Keycode))
-						changeSetKeyButton.Enable() // Re-enable the button
-					})
-					
-					// Exit the goroutine
-					return
-				}
-			}
-		}()
-	})
-	
+	changeSetKeyButton = widget.NewButton("Clique para definir tecla", OnChangeSetKeyButtonClicked(&changeSetKeyButton, &config, &isMonitoring))
+
 	// If we have a saved key, show it on the button
 	if config.ChangeSetKeyChar != "" {
 		changeSetKeyButton.SetText(fmt.Sprintf("Tecla: %s (código: %d)", config.ChangeSetKeyChar, config.ChangeSetKeyCode))
 	}
 
-	timeClicksEntry := widget.NewEntry()
-	if config.TimingChange != "" {
-		timeClicksEntry.SetText(config.TimingChange)
+	InBetweenTimeClicksEntry := widget.NewEntry()
+	if config.InBetweenTimeClicks > 0 {
+		InBetweenTimeClicksEntry.SetText(fmt.Sprintf("%d", config.InBetweenTimeClicks))
 	} else {
-		timeClicksEntry.SetPlaceHolder("Tempo em milisegundos. Exemplo: 1000 = 1 segundo. 200 = 0.2 segundos, quando menor, mais rapido.")
+		InBetweenTimeClicksEntry.SetPlaceHolder("Tempo em milisegundos. Exemplo: 1000 = 1 segundo. 200 = 0.2 segundos, quando menor, mais rapido.")
 	}
-	
-	// Dynamic item keys conta	iner
+
+	// Dynamic item keys fields
 	itemKeysContainer := container.NewVBox()
 	var itemKeyEntries []*widget.Entry
 
-	// Function to update item keys fields
-	updateItemKeys := func(numItems int) {
-		itemKeysContainer.RemoveAll()
-		itemKeyEntries = make([]*widget.Entry, numItems)
-		
-		
-		for i := 0; i < numItems; i++ {
-			entry := widget.NewEntry()
-			
-			label := widget.NewLabel(fmt.Sprintf("Item %d:", i+1))
-			// In case we have saved keys, auto populate them
-			if i < len(config.Keys) && config.Keys[i] != "" {
-				entry.SetText(config.Keys[i])
-			} else {
-				entry.SetPlaceHolder(fmt.Sprintf("Tecla do item %d", i+1))
-			}
-			itemKeyEntries[i] = entry
-			itemKeysContainer.Add(container.NewHBox(label, entry))
-		}
-		itemKeysContainer.Refresh()
-	}
+	// Function to update item keys fields. This is where all items
+	updateItemKeys := UpdateItemKeys(&config, len(config.Keys), itemKeysContainer, &itemKeyEntries)
 
 	// Update item keys when number of items changes
-	numItemsEntry.OnChanged = func(text string) {
-		if num, err := strconv.Atoi(text); err == nil && num >= 1 && num <= 11 {
-			updateItemKeys(num)
-		}
-	}
+	numItemsEntry.OnChanged = UpdateItemKeysOnChanged(numItemsEntry, updateItemKeys)
 
 	// Initialize item keys on app startup if config exists
 	if len(config.Keys) > 0 {
@@ -278,125 +165,27 @@ func (g *GuiApp) RunGUI() {
 
 	// HWID display (for support purposes)
 	hwidLabel := widget.NewLabel("Carregando HWID...")
-	go func() {
-		fyne.Do(func() {
-			hwid, err := GetHWID()
-			if err == nil {
-				hwidLabel.SetText(fmt.Sprintf("HWID: %s", hwid))
-			} else {
-				hwidLabel.SetText("Erro ao obter HWID")
-			}
-		})
-	}()
+	go GetHWIDLabel(hwidLabel)
 
 	// Start button (already declared above)
 	var stopMonitoring chan bool
 
-	startButton = widget.NewButton("Iniciar Monitoramento", func() {
-		if startButton.Text == "Parar Monitoramento" {
-			if stopMonitoring != nil {
-				close(stopMonitoring)
-			}
-			statusLabel.SetText("Monitoramento parado.")
-			startButton.SetText("Iniciar Monitoramento")
-			return
-		}
-
-		// Validate email first
-		email := emailEntry.Text
-		if !IsValidEmail(email) {
-			log.Printf("Invalid email. Email used: %s", email)
-			statusLabel.SetText("Erro: Digite um email válido")
-			return
-		}
-
-		// Check if email and subscription are valid (already verified)
-		if !isEmailValid || !isSubscriptionValid {
-			log.Printf("Email is either invalid or usubscribed. Invalid: %v. Unsubscribed %v", isEmailValid, isSubscriptionValid)
-			statusLabel.SetText("Erro: Email deve estar registrado e assinatura ativa")
-			return
-		}
-
-		// Get the captured keycode from config
-		// We already stored this when the user clicked the capture button
-		changeSetKeyCode := config.ChangeSetKeyCode
-		if changeSetKeyCode == 0 {
-			log.Printf("User did not configure change set key")
-			statusLabel.SetText("Erro: Defina a tecla para trocar de set")
-			return
-		}
-
-		// Validate inputs
-		numItems, err := strconv.Atoi(numItemsEntry.Text)
-		if err != nil || numItems < 1 || numItems > 11 {
-			log.Printf("User entered wrong number of items")
-			statusLabel.SetText("Erro: Número de items deve ser entre 1 e 11")
-			return
-		}
-
-		keyShift := keyShiftEntry.Text
-		if keyShift != "v" && keyShift != "`" && keyShift != "'" {
-			log.Printf("User select wrong key to change bar")
-			statusLabel.SetText("Erro: Tecla deve ser *v* ou *`* ou *'*")
-			return
-		}
-
-		timeClicks, err := strconv.Atoi(timeClicksEntry.Text)
-		if err != nil || timeClicks < 0 {
-			log.Printf("User selected wrong timing in between changes")
-			statusLabel.SetText("Erro: Tempo deve ser um número válido")
-			return
-		}
-
-		// Collect item keys
-		itemKeys := make([]string, numItems)
-		for i := 0; i < numItems; i++ {
-			if i < len(itemKeyEntries) && itemKeyEntries[i].Text != "" {
-				itemKeys[i] = itemKeyEntries[i].Text
-			} else {
-				log.Printf("User attempted to started before filling all keys. Missing key %d", i+1)
-				statusLabel.SetText(fmt.Sprintf("Erro: Digite a tecla para o item %d", i+1))
-				return
-			}
-
-		}
-
-		// Check subscription before starting monitoring
-		statusLabel.SetText("Verificando assinatura...")
-		startButton.SetText("Verificando...")
-
-		// Check subscription with retry
-		user := ValidadeUser(email, hwid)
-		if !user.Active {
-			statusLabel.SetText(user.Error)
-			startButton.SetText("Iniciar Monitoramento")
-			startButton.Disable()
-			return
-		}
-
-		// Setup configuration
-		g.setup = &SetupEquip{
-			NumberItems: numItems,
-			KeyChange:   keyShift,
-			TimeClicks:  timeClicks,
-			ItemKeys:    itemKeys,
-			CurrentSet:  1,
-		}
-
-		startButton.Enable()
-		statusLabel.SetText(fmt.Sprintf("Assinatura ativa! Monitoramento iniciado. Pressione %s para trocar de set.", config.ChangeSetKeyChar))
-		startButton.SetText("Parar Monitoramento")
-
-		// Start monitoring in a goroutine
-		stopMonitoring = make(chan bool)
-		log.Printf("Saving configuration into file")
-		errConfig := SaveConfig(email, keyShift, timeClicksEntry.Text, config.ChangeSetKeyChar, itemKeys, changeSetKeyCode)
-		if errConfig != nil {
-			log.Printf("Failed to save config. Error %s", errConfig)
-			return
-		}
-		go g.startMonitoring(statusLabel, stopMonitoring, changeSetKeyCode)
-	})
+	startButton = widget.NewButton("Iniciar Monitoramento", g.StartButton(
+		emailEntry,
+		hwid,
+		keyBarShiftEntry,
+		InBetweenTimeClicksEntry,
+		&isEmailValid,
+		&isSubscriptionValid,
+		&config,
+		&itemKeyEntries,
+		numItemsEntry,
+		statusLabel,
+		&startButton,
+		&stopMonitoring,
+		&isMonitoring,
+	),
+	)
 
 	// Initialize button as disabled
 	startButton.Disable()
@@ -408,7 +197,7 @@ func (g *GuiApp) RunGUI() {
 				user := RegisterEmailWithHWID(config.Email, hwid)
 				if user.Active {
 					userSub := ValidadeUser(config.Email, hwid)
-					if err == nil && userSub.Active {
+					if userSub.Active {
 						emailStatusLabel.SetText("✅ Email registrado e assinatura ativa")
 						isEmailValid = true
 						isSubscriptionValid = true
@@ -419,14 +208,7 @@ func (g *GuiApp) RunGUI() {
 		}()
 	}
 
-	resetHWIDButton = widget.NewButton("Resetar HWID", func() {
-		user := ResetHWID(emailEntry.Text, hwid)
-		if user.Active {
-			emailStatusLabel.SetText("✅ HWID resetado")
-		} else {
-			emailStatusLabel.SetText("⚠️ " + user.Error)
-		}
-	})
+	resetHWIDButton = widget.NewButton("Resetar HWID", ResetHWIDButton(emailEntry, hwid, emailStatusLabel))
 	resetHWIDButton.Disable()
 
 	// Form layout
@@ -436,9 +218,9 @@ func (g *GuiApp) RunGUI() {
 		widget.NewForm(
 			widget.NewFormItem("Email usado na compra do programa:", container.NewVBox(emailEntry, emailStatusLabel)),
 			widget.NewFormItem("Quantos items deseja trocar?", numItemsEntry),
-			widget.NewFormItem("Tecla para mudar barras de skills:", keyShiftEntry),
-			widget.NewFormItem("Tecla para trocar de set:", changeSetKeyButton),
-			widget.NewFormItem("Tempo entre clicks (em milisegundos):", timeClicksEntry),
+			widget.NewFormItem("Tecla para mudar a barra de skills:", keyBarShiftEntry),
+			widget.NewFormItem("Tecla para trocar o set:", changeSetKeyButton),
+			widget.NewFormItem("Tempo de click entre items (em milisegundos):", InBetweenTimeClicksEntry),
 		),
 		widget.NewLabel("Teclas dos Items:"),
 		itemKeysContainer,
@@ -465,9 +247,11 @@ func (g *GuiApp) startMonitoring(statusLabel *widget.Label, stopChan chan bool, 
 		case ev := <-evChan:
 			// Check if the pressed key matches the configured key
 			if ev.Kind == hook.KeyDown && ev.Keycode == keyCode {
-				statusLabel.SetText("Trocando set...")
-				ChangeItems(g.setup)
-				statusLabel.SetText("Set trocado! Pressione a tecla novamente para trocar.")
+				fyne.Do(func() {
+					statusLabel.SetText("Trocando set...")
+					ChangeItems(g.setup)
+					statusLabel.SetText("Set trocado! Pressione a tecla novamente para trocar.")
+				})
 			}
 		}
 	}
