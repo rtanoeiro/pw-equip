@@ -7,17 +7,24 @@ import (
 	"path/filepath"
 )
 
+// Email - Email used to register the user
+// BarChangeKey - Key used to change the skill bar
+// TimingChange - Timing in milliseconds between each click
+// ChangeSetKeyCode - Code of the key used to change the set
+// ChangeSetKeyChar - Character of the key used to change the set
+// Keys - Keys used to press the items in the set
 type Config struct {
-	Email string `json:"email"`
-	BarChangeKey string `json:"barchangekey"`
-	TimingChange string `json:"timingchange"`
-	ChangeSetKeyCode uint16 `json:"changesetkey"`
-	ChangeSetKeyChar string `json:"changesetkeychar"`
-	Keys []string `json:"keys"`
+	Email               string   `json:"email"`
+	Hwid                string   `json:"hwid"`
+	BarChangeKey        string   `json:"barchangekey"`
+	InBetweenTimeClicks int      `json:"inbetweentimeclicks"`
+	ChangeSetKeyCode    uint16   `json:"changesetkey"`
+	ChangeSetKeyChar    string   `json:"changesetkeychar"`
+	Keys                []string `json:"keys"`
 }
 
 // getConfigPath returns the path to the config file
-func getConfigPath() (string, error) {
+func GetConfigPath() (string, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
@@ -33,35 +40,34 @@ func getConfigPath() (string, error) {
 	return filepath.Join(configDir, "config.json"), nil
 }
 
-func SaveConfig(email, keyChange, timingChange,changeSetKeyChar string, keys []string, changeSetKeyCode uint16) error {
+func SaveConfig(email, hwid, keyChange, changeSetKeyChar string, inBetweenTimeClicks int, keys []string, changeSetKeyCode uint16) error {
 	config := Config{
-		Email: email,
-		BarChangeKey: keyChange,
-		TimingChange: timingChange,
-		Keys: keys,
-		ChangeSetKeyCode: changeSetKeyCode,
-		ChangeSetKeyChar: changeSetKeyChar,
-		
+		Email:               email,
+		Hwid:                hwid,
+		BarChangeKey:        keyChange,
+		InBetweenTimeClicks: inBetweenTimeClicks,
+		Keys:                keys,
+		ChangeSetKeyCode:    changeSetKeyCode,
+		ChangeSetKeyChar:    changeSetKeyChar,
 	}
 
-	configPath, err := getConfigPath()
+	configPath, err := GetConfigPath()
 	if err != nil {
 		return err
 	}
-
 
 	data, err := json.MarshalIndent(config, "", "  ")
 	if err != nil {
 		return err
 	}
-	log.Printf("Successfullt saved config into file")
+	log.Printf("Successfully saved config into file")
 
 	return os.WriteFile(configPath, data, 0644)
 }
 
 // LoadEmail loads the email from the config file
 func LoadConfig() (Config, error) {
-	configPath, err := getConfigPath()
+	configPath, err := GetConfigPath()
 	if err != nil {
 		return Config{}, err
 	}

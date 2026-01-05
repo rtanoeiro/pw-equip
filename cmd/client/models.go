@@ -3,7 +3,7 @@ package main
 type SetupEquip struct {
 	NumberItems int
 	KeyChange   string
-	TimeClicks  int
+	InBetweenTimeClicks  int
 	ItemKeys    []string
 	CurrentSet  int
 }
