@@ -51,7 +51,6 @@ services:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_PORT: "3306"
-      JWT_SECRET: ${JWT_SECRET}
     restart: unless-stopped
     volumes:
       - ./logs:/app/logs
