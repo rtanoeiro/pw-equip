@@ -21,7 +21,7 @@ services:
       timeout: 20s
       retries: 10
     networks:
-      - docker_pw-network
+      - pw-network
 
   phpmyadmin-equip:
     image: phpmyadmin:apache
@@ -35,7 +35,7 @@ services:
       mysql-equip-prod:
         condition: service_healthy
     networks:
-      - docker_pw-network
+      - pw-network
 
   pw-equip-prod:
     image: rtanoeiro/pw-equip:prod
@@ -61,7 +61,7 @@ services:
       mysql-equip-prod:
         condition: service_healthy
     networks:
-      - docker_pw-network
+      - pw-network
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:${API_PORT}/equip/health" ]
       interval: 30s
@@ -74,5 +74,5 @@ volumes:
 
 
 networks:
-  docker_pw-network:
+  pw-network:
     external: true
