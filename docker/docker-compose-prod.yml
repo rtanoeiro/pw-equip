@@ -14,7 +14,7 @@ services:
     ports:
       - "${MYSQL_PORT}:3306"
     volumes:
-      - ~/docker-volumes/mysql-equip-prod:/var/lib/mysql
+      - root/docker-volumes/mysql-equip-prod:/var/lib/mysql
     restart: unless-stopped
     healthcheck:
       test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${MYSQL_USER}", "-p${MYSQL_PASSWORD}" ]
