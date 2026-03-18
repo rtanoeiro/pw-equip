@@ -1,6 +1,6 @@
 module pw-equip-change
 
-go 1.24.4
+go 1.26.1
 
 require (
 	github.com/go-chi/chi v1.5.5
