@@ -13,9 +13,8 @@ import (
 
 func main() {
 
-	if err := godotenv.Load(); err != nil {
-		log.Fatalf("Failed to load environment variables: %v", err)
-	}
+	// Optional: load .env for local dev; in production env is set by Docker/orchestrator
+	_ = godotenv.Load()
 
 	equipCfg := &api.EquipConfig{}
 	equipCfg.LoadEquipConfig()
