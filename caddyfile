@@ -1,0 +1,22 @@
+painelguildpw.com.br, www.painelguildpw.com.br {
+    import logging
+
+    # Equip API endpoints
+    handle /equip/* {
+        reverse_proxy 127.0.0.1:8090
+    }
+    
+    # Equip App PHPMyAdmin
+    handle /phpmyadmin-equip/* {
+        reverse_proxy 127.0.0.1:8091
+    }
+
+    handle_errors {
+	    respond "Error: {err.status_code} {err.status_text}"
+    }
+
+    # Guid (catch-all)
+    handle {
+        reverse_proxy 127.0.0.1:8080
+    }
+}
