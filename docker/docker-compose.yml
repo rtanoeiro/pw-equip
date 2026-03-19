@@ -40,6 +40,8 @@ services:
     container_name: pw-equip-prod
     ports:
       - "${API_PORT}:${API_PORT}"
+    env_file:
+      - ../.env
     environment:
       ENV: "prod"
       API_PORT: "${API_PORT}"
