@@ -50,7 +50,7 @@ func (config *EquipConfig) LoadEquipConfig() {
 		},
 	}
 
-	mySQLEquipDatabase := GetEnvVar("MYSQL_EQUIP_DATABASE", "equip")
+	mySQLEquipDatabase := GetEnvVar("MYSQL_DATABASE", "equip")
 	equipDBURL := fmt.Sprintf(
 		"%s:%s@tcp(%s:%s)/%s?parseTime=true",
 		config.MySQLUser,
