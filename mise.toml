@@ -24,8 +24,8 @@ run = "golangci-lint run ./..."
 description = "Run all checks (test, security, format, lint)"
 depends = ["test", "sec", "fmt", "lint"]
 
-[tasks.build]
-run = "sh build.sh"
+[tasks.build-binary]
+run = "bash build-binary.sh"
 
 [tasks.build]
 description = "Build Docker image"
