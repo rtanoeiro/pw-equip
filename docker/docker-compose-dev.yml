@@ -1,0 +1,47 @@
+services:
+  mysql-guild-dev:
+    image: mysql:latest
+    container_name: mysql-guild-dev
+    env_file:
+      - ../.env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_HOST: ${MYSQL_HOST}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      TZ: Melbourne/Australia
+    ports:
+      - "3308:3306"
+    volumes:
+      - $HOME/docker-volumes/mysql-equip:/var/lib/mysql
+    restart: unless-stopped
+    command: [ 'mysqld', '--default-time-zone=+11:00' ]
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${MYSQL_USER}", "-p${MYSQL_PASSWORD}" ]
+      timeout: 20s
+      retries: 10
+    networks:
+      - pw-network
+
+  phpmyadmin-guild:
+    image: phpmyadmin:apache
+    container_name: phpmyadmin-guild
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: mysql-guild-dev
+      PMA_PORT: 3306
+      TZ: Melbourne/Australia
+    depends_on:
+      mysql-guild-dev:
+        condition: service_healthy
+    networks:
+      - pw-network
+volumes:
+  mysql_data:
+
+
+networks:
+  pw-network:
+    driver: bridg

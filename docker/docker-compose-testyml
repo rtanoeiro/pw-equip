@@ -1,0 +1,81 @@
+services:
+  mysql-guild-test:
+    image: mysql:latest
+    container_name: mysql-guild-test
+    env_file:
+      - ../.env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_HOST: ${MYSQL_HOST}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      TS3_USER: ${TS3_USER}
+      TS3_PASSWORD: ${TS3_PASSWORD}
+      TS3_HOST: ${TS3_HOST}
+      TZ: America/Sao_Paulo
+    ports:
+      - "3308:3306"
+    volumes:
+      - $HOME/docker-volumes/mysql-test:/var/lib/mysql
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${MYSQL_USER}", "-p${MYSQL_PASSWORD}" ]
+      timeout: 20s
+      retries: 10
+    networks:
+      - pw-network
+
+  phpmyadmin-guild:
+    image: phpmyadmin:apache
+    container_name: phpmyadmin-guild
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: mysql-guild-test
+      PMA_PORT: 3306
+      TZ: America/Sao_Paulo
+    depends_on:
+      mysql-guild-test:
+        condition: service_healthy
+    networks:
+      - pw-network
+
+  pw-guild-test:
+    image: rtanoeiro/pw-guild:test
+    container_name: pw-guild-test
+    platform: linux/amd64
+    ports:
+      - "${API_PORT}:${API_PORT}"
+    env_file:
+      - ../.env
+    environment:
+      ENV: TEST
+      API_PORT: "${API_PORT}"
+      MYSQL_HOST: ${MYSQL_HOST}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_PORT: "${MYSQL_PORT}"
+    restart: unless-stopped
+    volumes:
+      - ./app:/app/app
+    depends_on:
+      mysql-guild-test:
+        condition: service_healthy
+    networks:
+      - pw-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:${API_PORT}/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  mysql_data:
+
+
+networks:
+  pw-network:
+    driver: bridge
