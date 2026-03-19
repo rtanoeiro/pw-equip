@@ -2,7 +2,7 @@
 "aqua:golangci/golangci-lint" = "latest"
 air = "latest"
 "aqua:securego/gosec" = "latest"
-go = "1.25.2"
+go = "latest"
 
 [tasks.test]
 description = "Run tests with database migrations"
@@ -27,62 +27,22 @@ depends = ["test", "sec", "fmt", "lint"]
 [tasks.build]
 run = "sh build.sh"
 
-[tasks.build-prod]
+[tasks.build]
 description = "Build Docker image"
 run = "sudo docker build -f docker/Dockerfile-prod --platform linux/amd64 . -t rtanoeiro/pw-equip:prod"
 
-[tasks.build-test]
-description = "Build Docker image"
-run = "sudo docker build -f docker/Dockerfile-test --platform linux/amd64 . -t rtanoeiro/pw-equip:test"
-
-[tasks.build-dev]
-description = "Build Docker image"
-run = "sudo docker build -f docker/Dockerfile-dev --platform linux/amd64 . -t rtanoeiro/pw-equip:dev"
-
-[tasks.push-prod]
+[tasks.push]
 description = "Push Docker image"
 run = "sudo docker push rtanoeiro/pw-equip:prod"
 
-[tasks.push-test]
-description = "Push Docker image"
-run = "sudo docker push rtanoeiro/pw-equip:test"
-
-[tasks.push-dev]
-description = "Push Docker image"
-run = "sudo docker push rtanoeiro/pw-equip:dev"
-
-[tasks.run-dev]
+[tasks.run]
 description = "Run Docker image"
-run = "sudo docker compose -f docker/docker-compose-dev.yml --env-file cmd/server/.env up -d"
+run = "sudo docker compose -f docker/docker-compose.yml --env-file cmd/server/.env up -d"
 
-[tasks.run-test]
-description = "Run Docker image"
-run = "sudo docker compose -f docker/docker-compose-test.yml --env-file cmd/server/.env up -d"
-
-[tasks.run-prod]
-description = "Run Docker image"
-run = "sudo docker compose -f docker/docker-compose-prod.yml --env-file cmd/server/.env up -d"
-
-[tasks.stop-dev]
+[tasks.stop]
 description = "Stop Docker image"
-run = "sudo docker compose -f docker/docker-compose-dev.yml --env-file cmd/server/.env down"
+run = "sudo docker compose -f docker/docker-compose.yml --env-file cmd/server/.env down"
 
-[tasks.stop-test]
-description = "Stop Docker image"
-run = "sudo docker compose -f docker/docker-compose-test.yml --env-file cmd/server/.env down"
-
-[tasks.stop-prod]
-description = "Stop Docker image"
-run = "sudo docker compose -f docker/docker-compose-prod.yml --env-file cmd/server/.env down"
-
-[tasks.restart-test]
+[tasks.restart]
 description = "Restart Docker image"
-depends = ["stop-test", "run-test"]
-
-[tasks.restart-prod]
-description = "Restart Docker image"
-depends = ["stop-prod", "run-prod"]
-
-[tasks.restart-dev]
-description = "Restart Docker image"
-depends = ["stop-dev", "run-dev"]
+depends = ["stop", "run"]
