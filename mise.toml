@@ -37,11 +37,11 @@ run = "sudo docker push rtanoeiro/pw-equip:prod"
 
 [tasks.run]
 description = "Run Docker image"
-run = "sudo docker compose -f docker/docker-compose.yml --env-file cmd/server/.env up -d"
+run = "sudo docker compose -f docker/docker-compose.yml --env-file .env up -d"
 
 [tasks.stop]
 description = "Stop Docker image"
-run = "sudo docker compose -f docker/docker-compose.yml --env-file cmd/server/.env down"
+run = "sudo docker compose -f docker/docker-compose.yml --env-file .env down"
 
 [tasks.restart]
 description = "Restart Docker image"

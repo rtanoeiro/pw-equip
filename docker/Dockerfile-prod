@@ -20,8 +20,8 @@ COPY --from=builder /app/pw-equip .
 # Install runtime dependencies
 RUN apk update && apk add --no-cache mysql-client curl
 
-HEALTHCHECK --interval=30s --timeout=30s --retries=3 CMD curl -f http://localhost:${API_PORT}/equip/health || exit 1
+HEALTHCHECK --interval=30s --timeout=30s --retries=3 CMD curl -f http://localhost:8989/equip/health || exit 1
 
-EXPOSE ${API_PORT}
+EXPOSE 8989
 
 CMD ["./pw-equip"]
