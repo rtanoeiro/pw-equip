@@ -12,15 +12,10 @@ import (
 )
 
 func main() {
-	envFiles := []string{".env-dev", ".env-test", ".env-prod"}
-	var envFile string
-	for _, envFile := range envFiles {
-		err := godotenv.Load(envFile)
-		if err == nil {
-			break
-		}
+
+	if err := godotenv.Load(); err != nil {
+		log.Fatalf("Failed to load environment variables: %v", err)
 	}
-	log.Printf("Loaded environment variables from %s", envFile)
 
 	equipCfg := &api.EquipConfig{}
 	equipCfg.LoadEquipConfig()
