@@ -53,27 +53,27 @@ run = "sudo docker push rtanoeiro/pw-equip:dev"
 
 [tasks.run-dev]
 description = "Run Docker image"
-run = "sudo docker compose -f docker/docker-compose-dev.yml --env-file cmd/server/.env-dev up -d"
+run = "sudo docker compose -f docker/docker-compose-dev.yml --env-file cmd/server/.env up -d"
 
 [tasks.run-test]
 description = "Run Docker image"
-run = "sudo docker compose -f docker/docker-compose-test.yml --env-file cmd/server/.env-test up -d"
+run = "sudo docker compose -f docker/docker-compose-test.yml --env-file cmd/server/.env up -d"
 
 [tasks.run-prod]
 description = "Run Docker image"
-run = "sudo docker compose -f docker/docker-compose-prod.yml --env-file cmd/server/.env-prod up -d"
+run = "sudo docker compose -f docker/docker-compose-prod.yml --env-file cmd/server/.env up -d"
 
 [tasks.stop-dev]
 description = "Stop Docker image"
-run = "sudo docker compose -f docker/docker-compose-dev.yml --env-file cmd/server/.env-dev down"
+run = "sudo docker compose -f docker/docker-compose-dev.yml --env-file cmd/server/.env down"
 
 [tasks.stop-test]
 description = "Stop Docker image"
-run = "sudo docker compose -f docker/docker-compose-test.yml --env-file cmd/server/.env-test down"
+run = "sudo docker compose -f docker/docker-compose-test.yml --env-file cmd/server/.env down"
 
 [tasks.stop-prod]
 description = "Stop Docker image"
-run = "sudo docker compose -f docker/docker-compose-prod.yml --env-file cmd/server/.env-prod down"
+run = "sudo docker compose -f docker/docker-compose-prod.yml --env-file cmd/server/.env down"
 
 [tasks.restart-test]
 description = "Restart Docker image"
