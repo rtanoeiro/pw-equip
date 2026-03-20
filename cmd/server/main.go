@@ -33,7 +33,7 @@ func main() {
 
 	// Start web server in a goroutine
 	addr := fmt.Sprintf(":%s", equipCfg.ApiPort)
-	log.Printf("Starting web server on port %s", equipCfg.Config.ApiPort)
+	log.Printf("Starting web server on port %s", equipCfg.ApiPort)
 	if err := http.ListenAndServe(addr, r); err != nil {
 		log.Fatalf("Failed to start web server: %v", err)
 	}

@@ -1,9 +1,9 @@
 painelguildpw.com.br, www.painelguildpw.com.br {
     import logging
 
-    # Equip API endpoints
+    # Equip API — port must match API_PORT published by Docker/host (see .env-prod default 8989)
     handle /equip/* {
-        reverse_proxy 127.0.0.1:8090
+        reverse_proxy 127.0.0.1:8989
     }
     
     # Equip App PHPMyAdmin
